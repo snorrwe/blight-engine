@@ -1,0 +1,8 @@
+[package]
+name = "blight-engine"
+version = "0.1.0"
+authors = ["Daniel Kiss <littlesnorrboy@gmail.com>"]
+build = "build.rs"
+
+[dependencies]
+sdl2 = "0.31"
