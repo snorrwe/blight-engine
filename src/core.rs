@@ -8,6 +8,7 @@ use sdl2::pixels::Color;
 
 use super::systems::input::InputSystem;
 use super::systems::render::RenderSystem;
+use super::Game;
 
 pub struct BlightCore {
     render_system: Box<RenderSystem>,
@@ -27,12 +28,15 @@ impl BlightCore {
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run<TGame>(&mut self, game: &mut TGame)
+    where
+        TGame: Game,
+    {
         self.running.set(true);
         while self.running.get() {
             self.clear_canvas();
             self.update_input();
-            // The rest of the game loop goes here...
+            game.update();
             self.render_system.get_canvas().present();
             ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
         }
@@ -44,10 +48,6 @@ impl BlightCore {
 
     pub fn get_render(&mut self) -> *mut RenderSystem {
         &mut *self.render_system as *mut RenderSystem
-    }
-
-    pub fn get_render_mut(&mut self) -> &mut RenderSystem {
-        &mut self.render_system
     }
 
     fn update_input(&mut self) {
@@ -64,7 +64,7 @@ impl BlightCore {
 
     fn clear_canvas(&mut self) {
         let canvas = self.render_system.get_canvas();
-        canvas.set_draw_color(Color::RGB(255, 255, 0));
+        canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
     }
 }
