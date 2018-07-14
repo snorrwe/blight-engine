@@ -1,13 +1,14 @@
 #![feature(extern_prelude)]
 extern crate sdl2;
 
+pub mod components;
 pub mod core;
 pub mod systems;
 
 use core::BlightCore;
 
-pub trait Game {
-    fn new(engine: *mut BlightCore) -> Self;
+pub trait Game<'a> {
+    fn new(engine: *mut BlightCore<'a>) -> Self;
     fn update(&mut self) -> () {}
 }
 

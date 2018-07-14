@@ -1,6 +1,9 @@
 use sdl2::pixels::Color;
 use sdl2::{rect, render, video, Sdl};
+use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
+
+use super::super::components::render::RenderComponent as RenderComponentInner;
 
 pub type Window = video::Window;
 pub type Canvas = render::Canvas<Window>;
@@ -11,18 +14,47 @@ pub type Rect = rect::Rect;
 
 pub const WINDOW_SIZE: (u32, u32) = (800, 600); // TODO
 
-pub struct RenderSystem {
+#[derive(Debug, Clone)]
+pub struct RenderComponent<'a> {
+    id: usize,
+    system: *mut RenderSystem<'a>,
+}
+
+impl<'a> DerefMut for RenderComponent<'a> {
+    fn deref_mut(&mut self) -> &mut RenderComponentInner<'a> {
+        unsafe { (*self.system).get_component_by_id(self.id) }
+    }
+}
+
+impl<'a> Deref for RenderComponent<'a> {
+    type Target = RenderComponentInner<'a>;
+
+    fn deref(&self) -> &RenderComponentInner<'a> {
+        unsafe { (*self.system).get_component_by_id(self.id) }
+    }
+}
+
+impl<'a> Drop for RenderComponent<'a> {
+    fn drop(&mut self) {
+        unsafe {
+            (*self.system).delete_components_by_ids(&[self.id]);
+        }
+    }
+}
+
+pub struct RenderSystem<'a> {
     canvas: Canvas,
     texture_creator: TextureCreator,
     background_color: Color,
+    render_components: Vec<RenderComponentInner<'a>>,
 }
 
 pub enum VideoError {
     NotInitialised,
 }
 
-impl RenderSystem {
-    pub fn new(sdl_context: &Sdl) -> RenderSystem {
+impl<'a> RenderSystem<'a> {
+    pub fn new(sdl_context: &Sdl) -> RenderSystem<'a> {
         let video_subsystem = sdl_context.video().unwrap();
         let window = video_subsystem
             .window("Blight Engine", WINDOW_SIZE.0, WINDOW_SIZE.1)
@@ -31,12 +63,12 @@ impl RenderSystem {
             .build()
             .unwrap();
         let canvas = window.into_canvas().build().unwrap();
-        let result = RenderSystem {
+        RenderSystem {
             texture_creator: canvas.texture_creator(),
             canvas: canvas,
             background_color: Color::RGB(0, 0, 0),
-        };
-        result
+            render_components: vec![],
+        }
     }
 
     pub fn get_canvas(&self) -> &Canvas {
@@ -47,32 +79,83 @@ impl RenderSystem {
         &mut self.canvas
     }
 
-    pub fn clear(&mut self) {
-        self.canvas.set_draw_color(self.background_color);
-        self.canvas.clear();
-    }
-
     pub fn set_background_color(&mut self, background: Option<Color>) {
         self.background_color = background.unwrap_or(Color::RGB(0, 0, 0));
     }
 
     pub fn render(&mut self) {
+        self.clear();
+        for component in self.render_components.iter_mut() {
+            unsafe {
+                component.render();
+            }
+        }
         self.canvas.present();
     }
 
-    pub fn texture_creator<'a>(&'a self) -> &'a TextureCreator {
+    fn clear(&mut self) {
+        self.canvas.set_draw_color(self.background_color);
+        self.canvas.clear();
+    }
+
+    pub fn texture_creator(&'a self) -> &'a TextureCreator {
         &self.texture_creator
     }
 
-    pub fn render_texture<'a>(&mut self, texture: &Texture<'a>, rect: &Rect) {
+    pub fn render_texture(&mut self, texture: &Texture<'a>, rect: &Rect) {
         self.canvas.copy(texture, None, *rect).unwrap();
     }
 
-    pub fn create_texture<'a>(&'a mut self, size: &(u32, u32)) -> Texture {
+    pub fn create_texture(&'a mut self, size: &(u32, u32)) -> Texture {
         let texture = self
             .texture_creator()
             .create_texture_target(None, size.0, size.1)
             .unwrap();
         texture
+    }
+
+    pub fn create_component(&'a mut self) -> RenderComponent {
+        static mut NEXT_ID: usize = 0;
+        unsafe {
+            assert!(NEXT_ID < <usize>::max_value());
+            NEXT_ID += 1;
+            let result = RenderComponentInner::new(self as *mut RenderSystem<'a>, NEXT_ID.clone());
+            self.render_components.push(result);
+            RenderComponent {
+                id: NEXT_ID.clone(),
+                system: self as *mut RenderSystem,
+            }
+        }
+    }
+
+    pub fn get_components_by_ids(
+        &'a mut self,
+        ids: &[usize],
+    ) -> Vec<&mut RenderComponentInner<'a>> {
+        self.render_components
+            .iter_mut()
+            .filter(|component| {
+                let id = component.get_id();
+                ids.iter().any(|i| *i == id)
+            })
+            .collect()
+    }
+
+    pub fn get_component_by_id(&'a mut self, id: usize) -> &mut RenderComponentInner<'a> {
+        self.render_components
+            .iter_mut()
+            .find(|component| component.get_id() == id)
+            .expect(&format!("No component exists by the id [{}]", id))
+    }
+
+    pub fn delete_components_by_ids(&mut self, ids: &[usize]) {
+        self.render_components.retain(|component| {
+            let id = component.get_id();
+            ids.iter().any(|i| *i != id)
+        });
+    }
+
+    pub fn clear_components(&mut self) {
+        self.render_components.clear();
     }
 }

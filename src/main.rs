@@ -3,6 +3,8 @@ extern crate sdl2;
 #[macro_use(blight_main)]
 extern crate blight;
 
+use std::collections::BTreeMap;
+
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
@@ -10,7 +12,7 @@ use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
 
 use blight::core::BlightCore;
-use blight::systems::render::{Canvas, RenderSystem, Texture, WINDOW_SIZE};
+use blight::systems::render::{Canvas, RenderComponent, RenderSystem, Texture, WINDOW_SIZE};
 use blight::Game;
 
 const PLAYGROUND_WIDTH: u32 = 49;
@@ -19,11 +21,12 @@ const CELL_SIZE: u32 = WINDOW_SIZE.0 / PLAYGROUND_WIDTH;
 const BLINK_THRESHOLD: u8 = 60;
 
 struct GameOfLife<'a> {
-    engine: *mut BlightCore,
+    engine: *mut BlightCore<'a>,
     textures: (Texture<'a>, Texture<'a>),
     playground: [bool; (PLAYGROUND_WIDTH * PLAYGROUND_HEIGHT) as usize],
     playing: bool,
     blinks: u8,
+    cells: BTreeMap<usize, RenderComponent<'a>>,
 }
 
 impl<'a> GameOfLife<'a> {
@@ -42,7 +45,7 @@ impl<'a> GameOfLife<'a> {
         }
     }
 
-    fn create_game_textures(engine: *mut BlightCore) -> (Texture<'a>, Texture<'a>) {
+    fn create_game_textures(engine: *mut BlightCore<'a>) -> (Texture<'a>, Texture<'a>) {
         unsafe {
             let renderer = (*engine).get_render();
             let mut texture1 = (*renderer).create_texture(&(CELL_SIZE, CELL_SIZE));
@@ -138,8 +141,9 @@ impl<'a> GameOfLife<'a> {
     }
 
     unsafe fn handle_input(&mut self) {
-        for event in (*self.engine).get_input().iter_events() {
-            match event {
+        (*self.engine)
+            .get_input()
+            .handle_events(&mut |event| match event {
                 Event::KeyDown {
                     keycode: Some(Keycode::Space),
                     repeat: false,
@@ -160,44 +164,48 @@ impl<'a> GameOfLife<'a> {
                     }
                 }
                 _ => {}
-            }
-        }
+            });
     }
 
     unsafe fn render_playground(&mut self) {
         let renderer = (*self.engine).get_render();
         for (i, cell) in self.playground.iter().enumerate() {
             if !*cell {
+                self.cells.remove(&i);
                 continue;
             }
-            let i = i as u32;
+            if !self.cells.contains_key(&i) {
+                let mut component = (*renderer).create_component();
+                let x = i as u32;
+                component.set_position(Rect::new(
+                    ((x % PLAYGROUND_WIDTH) * CELL_SIZE) as i32,
+                    ((x / PLAYGROUND_WIDTH) * CELL_SIZE) as i32,
+                    CELL_SIZE,
+                    CELL_SIZE,
+                ));
+                self.cells.insert(i, component);
+            }
+            let mut component = self.cells.get_mut(&i).unwrap();
             let texture = if self.blinks > BLINK_THRESHOLD / 2 {
                 &self.textures.0
             } else {
                 &self.textures.1
             };
-            (*renderer).render_texture(
-                texture,
-                &Rect::new(
-                    ((i % PLAYGROUND_WIDTH) * CELL_SIZE) as i32,
-                    ((i / PLAYGROUND_WIDTH) * CELL_SIZE) as i32,
-                    CELL_SIZE,
-                    CELL_SIZE,
-                ),
-            );
+            component.set_texture(texture);
         }
         self.blinks = (self.blinks + 1) % BLINK_THRESHOLD;
     }
 }
 
-impl<'a> Game for GameOfLife<'a> {
-    fn new(engine: *mut BlightCore) -> Self {
+impl<'a> Game<'a> for GameOfLife<'a> {
+    fn new(engine: *mut BlightCore<'a>) -> Self {
         GameOfLife {
             textures: GameOfLife::create_game_textures(engine),
             engine: engine,
             playground: [false; (PLAYGROUND_WIDTH * PLAYGROUND_HEIGHT) as usize],
             playing: false,
             blinks: 0,
+            cells: BTreeMap::new(),
         }
     }
 

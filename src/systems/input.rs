@@ -26,7 +26,7 @@ impl InputSystem {
         }
     }
 
-    pub fn handle_events(&self, callback: &(Fn(&Event) -> ())) {
+    pub fn handle_events(&self, callback: &mut (FnMut(&Event) -> ())) {
         for event in self.events.iter() {
             callback(&event);
         }
