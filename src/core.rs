@@ -4,7 +4,6 @@ use std::time::Duration;
 use sdl2;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
 
 use super::systems::input::InputSystem;
 use super::systems::render::RenderSystem;
@@ -34,10 +33,10 @@ impl BlightCore {
     {
         self.running.set(true);
         while self.running.get() {
-            self.clear_canvas();
+            self.render_system.clear();
             self.update_input();
             game.update();
-            self.render_system.get_canvas().present();
+            self.render_system.render();
             ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
         }
     }
@@ -60,11 +59,5 @@ impl BlightCore {
             } => self.running.set(false),
             _ => {}
         });
-    }
-
-    fn clear_canvas(&mut self) {
-        let canvas = self.render_system.get_canvas();
-        canvas.set_draw_color(Color::RGB(0, 0, 0));
-        canvas.clear();
     }
 }

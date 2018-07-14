@@ -1,3 +1,4 @@
+use std::slice::Iter;
 use sdl2::{self, Sdl};
 
 pub type EventPump = sdl2::EventPump;
@@ -29,5 +30,9 @@ impl InputSystem {
         for event in self.events.iter() {
             callback(&event);
         }
+    }
+
+    pub fn iter_events(&self) -> Iter<Event> {
+        self.events.iter()
     }
 }
