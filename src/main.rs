@@ -4,6 +4,7 @@ extern crate sdl2;
 extern crate blight;
 
 use std::collections::BTreeMap;
+use std::time::{Duration, Instant};
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -27,6 +28,35 @@ struct GameOfLife<'a> {
     playing: bool,
     blinks: u8,
     cells: BTreeMap<usize, RenderComponent<'a>>,
+    last_update: Instant,
+    game_speed: Duration,
+}
+
+impl<'a> Game<'a> for GameOfLife<'a> {
+    fn new(engine: *mut BlightCore<'a>) -> Self {
+        GameOfLife {
+            textures: GameOfLife::create_game_textures(engine),
+            engine: engine,
+            playground: [false; (PLAYGROUND_WIDTH * PLAYGROUND_HEIGHT) as usize],
+            playing: false,
+            blinks: 0,
+            cells: BTreeMap::new(),
+            last_update: Instant::now(),
+            game_speed: Duration::from_millis(500),
+        }
+    }
+
+    fn update(&mut self) {
+        unsafe {
+            self.handle_input();
+            let now = Instant::now();
+            if now - self.last_update > self.game_speed {
+                self.update_world();
+                self.last_update = now;
+            }
+            self.render_playground();
+        }
+    }
 }
 
 impl<'a> GameOfLife<'a> {
@@ -194,27 +224,6 @@ impl<'a> GameOfLife<'a> {
             component.set_texture(texture);
         }
         self.blinks = (self.blinks + 1) % BLINK_THRESHOLD;
-    }
-}
-
-impl<'a> Game<'a> for GameOfLife<'a> {
-    fn new(engine: *mut BlightCore<'a>) -> Self {
-        GameOfLife {
-            textures: GameOfLife::create_game_textures(engine),
-            engine: engine,
-            playground: [false; (PLAYGROUND_WIDTH * PLAYGROUND_HEIGHT) as usize],
-            playing: false,
-            blinks: 0,
-            cells: BTreeMap::new(),
-        }
-    }
-
-    fn update(&mut self) {
-        unsafe {
-            self.handle_input();
-            self.update_world();
-            self.render_playground();
-        }
     }
 }
 
