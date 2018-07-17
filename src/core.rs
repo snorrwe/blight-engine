@@ -35,7 +35,7 @@ impl<'a> BlightCore<'a> {
     {
         self.running.set(true);
         let mut previous = Instant::now();
-        const TARGET_MS_PER_UPDATE: u64 = (1000.0 / 60.0) as u64;
+        const TARGET_MS_PER_UPDATE: u64 = 1000 / 60;
         let update_duration = Duration::from_millis(TARGET_MS_PER_UPDATE); // TODO: make property
         let mut lag = Duration::from_millis(0);
         while self.running.get() {
