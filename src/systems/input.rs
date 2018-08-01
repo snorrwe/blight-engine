@@ -1,5 +1,5 @@
-use std::slice::Iter;
 use sdl2::{self, Sdl};
+use std::slice::Iter;
 
 pub type EventPump = sdl2::EventPump;
 pub type Event = sdl2::event::Event;

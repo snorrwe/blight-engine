@@ -1,6 +1,7 @@
 #![feature(extern_prelude)]
 extern crate sdl2;
 
+pub mod common;
 pub mod components;
 pub mod core;
 pub mod systems;
