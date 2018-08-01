@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn tesT_simple_scalar_mul() {
+    fn test_simple_scalar_mul() {
         let vec = Vector2::new(2.0, 3.0);
         let result = 0.5 * vec;
 

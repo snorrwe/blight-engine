@@ -7,6 +7,8 @@ pub struct AABB {
 
 impl AABB {
     pub fn new(center: Vector2, width: f32, height: f32) -> AABB {
+        assert!(width > 0.);
+        assert!(height > 0.);
         AABB {
             center: center,
             radius: Vector2::new(width / 2.0, height / 2.0),
@@ -30,11 +32,50 @@ mod test {
     }
 
     #[test]
-    fn test_simple_intersection() {
+    fn test_simple_intersection_x() {
         let lhs = AABB::new(Vector2::new(-1., 0.), 2., 1.);
         let rhs = AABB::new(Vector2::new(1., 0.), 2.1, 1.);
 
         assert!(lhs.intersects(&rhs));
         assert!(rhs.intersects(&lhs));
+    }
+
+    #[test]
+    fn test_simple_intersection_y() {
+        let lhs = AABB::new(Vector2::new(0., -1.), 1., 2.);
+        let rhs = AABB::new(Vector2::new(0., 1.), 1., 2.1);
+
+        assert!(lhs.intersects(&rhs));
+        assert!(rhs.intersects(&lhs));
+    }
+
+    #[test]
+    fn test_simple_intersection_xy() {
+        let lhs = AABB::new(Vector2::new(1., -1.), 2.1, 2.);
+        let rhs = AABB::new(Vector2::new(-1., 1.), 2., 2.1);
+
+        assert!(lhs.intersects(&rhs));
+        assert!(rhs.intersects(&lhs));
+    }
+
+    #[test]
+    fn test_simple_non_intersecting() {
+        let lhs = AABB::new(Vector2::new(-1., 0.), 1., 1.);
+        let rhs = AABB::new(Vector2::new(1., 0.), 1., 1.);
+
+        assert!(!lhs.intersects(&rhs));
+        assert!(!rhs.intersects(&lhs));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_width_has_to_be_positive() {
+        AABB::new(Vector2::new(0., 0.), -1., 1.);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_height_has_to_be_positive() {
+        AABB::new(Vector2::new(0., 0.), 1., -1.);
     }
 }
