@@ -168,7 +168,7 @@ mod test {
     use test::Bencher;
 
     #[bench]
-    fn render_bunch<'a>(bencher: &mut Bencher) {
+    fn simple_render_bunch<'a>(bencher: &mut Bencher) {
         let sdl = sdl2::init().unwrap();
         let mut render_system = RenderSystem::new(&sdl);
         let render_ptr = &mut render_system as *mut RenderSystem;
@@ -183,7 +183,7 @@ mod test {
                 component.set_texture(&mut texture);
                 let x = rng.gen_range::<i32>(50, 500);
                 let y = rng.gen_range::<i32>(50, 500);
-                component.set_position(Rect::new(100, 100, TEXTURE_SIZE, TEXTURE_SIZE));
+                component.set_position(Rect::new(x, y, TEXTURE_SIZE, TEXTURE_SIZE));
                 components.push(component);
             }
 
