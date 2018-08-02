@@ -52,6 +52,7 @@ impl<'a> BlightCore<'a> {
                     None => Duration::from_millis(0),
                 };
             }
+
             self.render_system.render();
         }
     }
@@ -78,5 +79,9 @@ impl<'a> BlightCore<'a> {
             } => self.running.set(false),
             _ => {}
         });
+    }
+
+    pub fn stop(&mut self) {
+        self.running.set(false);
     }
 }

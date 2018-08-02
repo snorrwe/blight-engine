@@ -1,5 +1,10 @@
+#![feature(test)]
 #![feature(extern_prelude)]
 extern crate sdl2;
+extern crate test;
+
+#[cfg(test)]
+extern crate rand;
 
 pub mod common;
 pub mod components;
@@ -23,6 +28,3 @@ macro_rules! blight_main {
         }
     };
 }
-
-#[cfg(test)]
-mod tests {}

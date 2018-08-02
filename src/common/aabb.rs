@@ -15,6 +15,22 @@ impl AABB {
         }
     }
 
+    pub fn get_center<'a>(&'a self) -> &'a Vector2 {
+        &self.center
+    }
+
+    pub fn get_center_mut<'a>(&'a mut self) -> &'a mut Vector2 {
+        &mut self.center
+    }
+
+    pub fn get_radius<'a>(&'a self) -> &'a Vector2 {
+        &self.radius
+    }
+
+    pub fn get_radius_mut<'a>(&'a mut self) -> &'a mut Vector2 {
+        &mut self.radius
+    }
+
     pub fn intersects(&self, other: &AABB) -> bool {
         (self.center.x - other.center.x).abs() <= self.radius.x + other.radius.x
             && (self.center.y - other.center.y).abs() <= self.radius.y + other.radius.y

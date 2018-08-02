@@ -85,11 +85,11 @@ impl<'a> RenderSystem<'a> {
 
     pub fn render(&mut self) {
         self.clear();
-        for component in self.render_components.iter_mut() {
-            unsafe {
+        self.render_components
+            .iter_mut()
+            .for_each(|component| unsafe {
                 component.render();
-            }
-        }
+            });
         self.canvas.present();
     }
 
@@ -157,5 +157,39 @@ impl<'a> RenderSystem<'a> {
 
     pub fn clear_components(&mut self) {
         self.render_components.clear();
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use rand::prelude::*;
+    use sdl2;
+    use test::Bencher;
+
+    #[bench]
+    fn render_bunch<'a>(bencher: &mut Bencher) {
+        let sdl = sdl2::init().unwrap();
+        let mut render_system = RenderSystem::new(&sdl);
+        let render_ptr = &mut render_system as *mut RenderSystem;
+        unsafe {
+            let mut components = vec![];
+            const TEXTURE_SIZE: u32 = 50;
+            let mut texture = (*render_ptr).create_texture(&(TEXTURE_SIZE, TEXTURE_SIZE));
+
+            let mut rng = thread_rng();
+            for _ in 0..10000 {
+                let mut component = (*render_ptr).create_component();
+                component.set_texture(&mut texture);
+                let x = rng.gen_range::<i32>(50, 500);
+                let y = rng.gen_range::<i32>(50, 500);
+                component.set_position(Rect::new(100, 100, TEXTURE_SIZE, TEXTURE_SIZE));
+                components.push(component);
+            }
+
+            bencher.iter(|| {
+                render_system.render();
+            })
+        }
     }
 }
