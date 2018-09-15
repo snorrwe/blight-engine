@@ -22,6 +22,16 @@ impl Vector2 {
     pub fn sub(&self, other: &Vector2) -> Vector2 {
         Vector2::new(self.x - other.x, self.y - other.y)
     }
+
+    pub fn get(&self, i: usize) -> f32 {
+        if i == 0 {
+            self.x
+        } else if i == 1 {
+            self.y
+        } else {
+            panic!("Vector index out of range!")
+        }
+    }
 }
 
 impl Add<Vector2> for Vector2 {
