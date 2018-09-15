@@ -40,4 +40,13 @@ mod test {
         assert!(lhs.intersects(&rhs));
         assert!(rhs.intersects(&lhs));
     }
+
+    #[test]
+    fn test_sphere_sphere_too_far_are_not_intersecting() {
+        let lhs = Sphere::new(Vector2::new(0., 0.), 5.);
+        let rhs = Sphere::new(Vector2::new(10., 0.), 4.);
+
+        assert!(!lhs.intersects(&rhs));
+        assert!(!rhs.intersects(&lhs));
+    }
 }
