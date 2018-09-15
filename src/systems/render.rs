@@ -178,7 +178,7 @@ mod test {
             let mut texture = (*render_ptr).create_texture(&(TEXTURE_SIZE, TEXTURE_SIZE));
 
             let mut rng = thread_rng();
-            for _ in 0..10000 {
+            for _ in 0..100 {
                 let mut component = (*render_ptr).create_component();
                 component.set_texture(&mut texture);
                 let x = rng.gen_range::<i32>(50, 500);

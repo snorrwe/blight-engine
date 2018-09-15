@@ -7,8 +7,8 @@ pub struct AABB {
 
 impl AABB {
     pub fn new(center: Vector2, width: f32, height: f32) -> AABB {
-        assert!(width > 0.);
-        assert!(height > 0.);
+        assert!(width > 0.0);
+        assert!(height > 0.0);
         AABB {
             center: center,
             radius: Vector2::new(width / 2.0, height / 2.0),

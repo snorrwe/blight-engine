@@ -1,5 +1,6 @@
 use std::ops::{Add, Mul, Sub};
 
+#[derive(Debug, Clone)]
 pub struct Vector2 {
     pub x: f32,
     pub y: f32,
@@ -9,16 +10,25 @@ impl Vector2 {
     pub fn new(x: f32, y: f32) -> Vector2 {
         Vector2 { x: x, y: y }
     }
+
+    pub fn length(&self) -> f32 {
+        self.dot(self).sqrt()
+    }
+
+    pub fn dot(&self, other: &Vector2) -> f32 {
+        (self.x * other.x + self.y * other.y)
+    }
+
+    pub fn sub(&self, other: &Vector2) -> Vector2 {
+        Vector2::new(self.x - other.x, self.y - other.y)
+    }
 }
 
 impl Add<Vector2> for Vector2 {
     type Output = Vector2;
 
     fn add(self, rhs: Vector2) -> Vector2 {
-        Vector2 {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-        }
+        Vector2::new(self.x + rhs.x, self.y + rhs.y)
     }
 }
 
@@ -26,10 +36,7 @@ impl Sub<Vector2> for Vector2 {
     type Output = Vector2;
 
     fn sub(self, rhs: Vector2) -> Vector2 {
-        Vector2 {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-        }
+        Vector2::new(self.x - rhs.x, self.y - rhs.y)
     }
 }
 
@@ -37,15 +44,12 @@ impl Mul<Vector2> for f32 {
     type Output = Vector2;
 
     fn mul(self, rhs: Vector2) -> Vector2 {
-        Vector2 {
-            x: rhs.x * self,
-            y: rhs.y * self,
-        }
+        Vector2::new(self * rhs.x, self * rhs.y)
     }
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
 
     #[test]
@@ -77,5 +81,24 @@ mod tests {
 
         assert_eq!(result.x, 1.0);
         assert_eq!(result.y, 1.5);
+    }
+
+    #[test]
+    fn test_dot_product() {
+        let lhs = Vector2::new(1., 2.);
+        let rhs = Vector2::new(1., 3.);
+
+        let result = lhs.dot(&rhs);
+
+        assert_eq!(result, 7.0);
+    }
+
+    #[test]
+    fn test_length() {
+        let vec = Vector2::new(-3., 4.);
+
+        let result = vec.length();
+
+        assert_eq!(result, 5.);
     }
 }
