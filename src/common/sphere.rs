@@ -1,6 +1,6 @@
 use super::vector2::Vector2;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Sphere {
     center: Vector2,
     radius: f32,
@@ -34,7 +34,7 @@ mod test {
 
     #[test]
     fn test_sphere_sphere_intersection() {
-        let lhs = Sphere::new(Vector2::new(0., 0.), 5.);
+        let lhs = Sphere::new(Vector2::new(3., 2.), 5.);
         let rhs = Sphere::new(Vector2::new(10., 0.), 5.);
 
         assert!(lhs.intersects(&rhs));
