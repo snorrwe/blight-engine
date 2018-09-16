@@ -1,7 +1,7 @@
 use super::aabb::AABB;
 use super::matrix::Matrix22;
 use super::vector2::Vector2;
-use std::f32::EPSILON;
+use std::f32::{EPSILON, MAX};
 
 #[derive(Debug, Clone)]
 pub struct OBB2D {
@@ -29,6 +29,106 @@ impl OBB2D {
         }
     }
 
+    // Fit an OBB onto given points
+    // At least 3 points are required
+    // The points must be in "clock-wise order"
+    // e.g. given the points:
+    // (1, 0) (0, 1), (1, 1), (0, 0)
+    // a correct ordering would be
+    // [(0, 0), (0, 1), (1, 1), (1, 0)]
+    /* ```
+        let points = [
+            Vector2::new(3.0, 1.0),
+            Vector2::new(2.0, 2.0),
+            Vector2::new(4.0, 4.0),
+            Vector2::new(5.0, 3.0),
+        ];
+
+        let result = OBB2D::from_points(&points); // Correct
+
+        let points = [
+            Vector2::new(3.0, 1.0),
+            Vector2::new(5.0, 3.0),
+            Vector2::new(4.0, 4.0),
+            Vector2::new(2.0, 2.0),
+        ];
+
+        let result = OBB2D::from_points(&points); // Incorrect
+     ```
+     */
+    pub fn from_points(points: &[Vector2]) -> Self {
+        assert!(points.len() > 3, "Need at least 3 points to fit an OBB");
+        let mut it = points.iter();
+        it.next();
+        let mut min_area = MAX;
+        let mut center: Vector2 = Vector2::new(0., 0.);
+        let mut local: [Vector2; 2] = [Vector2::new(1., 0.), Vector2::new(0., 1.)];
+        let mut width = 0.;
+        let mut height = 0.;
+        it.zip(points.iter()).for_each(|(i, j)| {
+            // Calculate current edge, normalised
+            let mut e0 = j.sub(i);
+            e0 = (1. / e0.length()) * e0;
+
+            let e1 = e0.orthogonal();
+
+            let mut min0 = 0.;
+            let mut min1 = 0.;
+            let mut max0 = 0.;
+            let mut max1 = 0.;
+
+            for k in points {
+                let d = k.sub(j);
+
+                let mut dot = d.dot(&e0);
+
+                if dot < min0 {
+                    min0 = dot;
+                }
+                if dot > max0 {
+                    max0 = dot;
+                }
+
+                dot = d.dot(&e1);
+
+                if dot < min1 {
+                    min1 = dot;
+                }
+                if dot > max1 {
+                    max1 = dot;
+                }
+            }
+            let area = (max0 - min0) * (max1 - min1);
+            if area < min_area {
+                min_area = area;
+                let l0 = min0 + max0;
+                let l1 = min1 + max1;
+                center = j.clone() + 0.5 * (l0 * e0.clone() + l1 * e1.clone());
+                local[0] = e0;
+                local[1] = e1;
+                width = l0.abs() * 0.5;
+                height = l1.abs() * 0.5;
+            }
+        });
+        OBB2D {
+            center: center,
+            local: local,
+            extents: Vector2::new(width, height),
+        }
+    }
+
+    pub fn get_center(&self) -> &Vector2 {
+        &self.center
+    }
+
+    pub fn get_local(&self) -> &[Vector2] {
+        &self.local
+    }
+
+    pub fn get_extents(&self) -> &Vector2 {
+        &self.extents
+    }
+
     pub fn intersects_aabb(&self, other: &AABB) -> bool {
         let other = OBB2D::from_aabb(other);
         self.intersects(&other)
@@ -38,7 +138,8 @@ impl OBB2D {
         let mut rotation = Matrix22::uninitialised();
         let mut abs_r = Matrix22::uninitialised();
 
-        // Compute rotation matrix expressing `other` in `self`'s coordinate frame
+        // Compute rotation matrix expressing `other` in `self`'s coordinate
+        // frame
         for i in 0..2 {
             for j in 0..2 {
                 rotation.set(i, j, self.local[i].dot(&other.local[j]));
@@ -86,17 +187,6 @@ impl OBB2D {
                 return false;
             }
         }
-
-        // TODO
-        // Test axis L = A0 × B0
-        // ra = self.extents.x * abs_r.get(1, 0);
-        // rb = other.extents.x * abs_r.get(0, 1);
-        // if translation.y * rotation.get(0, 0) - translation.x * rotation.get(1, 0) > ra + rb {
-        //     return false;
-        // }
-        // Test axis L = A0 × B1
-        // Test axis L = A1 × B0
-        // Test axis L = A1 × B1
 
         true
     }
@@ -184,5 +274,81 @@ mod test {
 
         assert!(!lhs.intersects(&rhs));
         assert!(!rhs.intersects(&lhs));
+    }
+
+    #[test]
+    fn test_simple_rotated_non_intersecting() {
+        let lhs = OBB2D::from_points(&[
+            Vector2::new(3.0, 1.0),
+            Vector2::new(2.0, 2.0),
+            Vector2::new(4.0, 4.0),
+            Vector2::new(5.0, 3.0),
+        ]);
+
+        let rhs = OBB2D::from_points(&[
+            Vector2::new(6.0, 1.0),
+            Vector2::new(8.0, 1.0),
+            Vector2::new(8.0, 3.0),
+            Vector2::new(6.0, 3.0),
+        ]);
+
+        assert!(!lhs.intersects(&rhs));
+        assert!(!rhs.intersects(&lhs));
+    }
+
+    #[test]
+    fn test_simple_point_fitting() {
+        let points = [
+            Vector2::new(3.0, 1.0),
+            Vector2::new(2.0, 2.0),
+            Vector2::new(4.0, 4.0),
+            Vector2::new(5.0, 3.0),
+        ];
+
+        let result = OBB2D::from_points(&points);
+
+        assert_eq!(*result.get_center(), Vector2::new(3.5, 2.5));
+        assert_eq!(
+            *result.get_local(),
+            [
+                Vector2::new(0.70710677, -0.70710677),
+                Vector2::new(-0.70710677, -0.70710677)
+            ]
+        );
+        assert_eq!(*result.get_extents(), Vector2::new(0.70710677, 1.4142135));
+
+        let result = OBB2D::from_points(&[
+            Vector2::new(6.0, 3.0),
+            Vector2::new(8.0, 3.0),
+            Vector2::new(8.0, 1.0),
+            Vector2::new(6.0, 1.0),
+        ]);
+
+        assert_eq!(*result.get_center(), Vector2::new(7., 2.));
+        assert_eq!(
+            *result.get_local(),
+            [Vector2::new(-1., 0.), Vector2::new(0., 1.)]
+        );
+        assert_eq!(*result.get_extents(), Vector2::new(1., 1.));
+    }
+
+    #[test]
+    fn test_simple_rotated_intersecting() {
+        let lhs = OBB2D::from_points(&[
+            Vector2::new(4.18, 0.3),
+            Vector2::new(3.18, 1.3),
+            Vector2::new(5.18, 3.3),
+            Vector2::new(6.18, 2.3),
+        ]);
+
+        let rhs = OBB2D::from_points(&[
+            Vector2::new(6.0, 1.0),
+            Vector2::new(8.0, 1.0),
+            Vector2::new(8.0, 3.0),
+            Vector2::new(6.0, 3.0),
+        ]);
+
+        assert!(lhs.intersects(&rhs));
+        assert!(rhs.intersects(&lhs));
     }
 }

@@ -1,3 +1,4 @@
+use std::cmp::{Eq, PartialEq};
 use std::ops::{Add, Mul, Sub};
 
 #[derive(Debug, Clone)]
@@ -9,6 +10,10 @@ pub struct Vector2 {
 impl Vector2 {
     pub fn new(x: f32, y: f32) -> Vector2 {
         Vector2 { x: x, y: y }
+    }
+
+    pub fn orthogonal(&self) -> Vector2 {
+        Vector2::new(self.y, -self.x)
     }
 
     pub fn length(&self) -> f32 {
@@ -33,6 +38,14 @@ impl Vector2 {
         }
     }
 }
+
+impl PartialEq for Vector2 {
+    fn eq(&self, other: &Vector2) -> bool {
+        self.x == other.x && self.y == other.y
+    }
+}
+
+impl Eq for Vector2 {}
 
 impl Add<Vector2> for Vector2 {
     type Output = Vector2;
