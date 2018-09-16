@@ -58,13 +58,13 @@ impl OBB2D {
      */
     pub fn from_points(points: &[Vector2]) -> Self {
         assert!(points.len() > 3, "Need at least 3 points to fit an OBB");
-        let mut it = points.iter();
-        it.next();
         let mut min_area = MAX;
         let mut center: Vector2 = Vector2::new(0., 0.);
         let mut local: [Vector2; 2] = [Vector2::new(1., 0.), Vector2::new(0., 1.)];
         let mut width = 0.;
         let mut height = 0.;
+        let mut it = points.iter();
+        it.next();
         it.zip(points.iter()).for_each(|(i, j)| {
             // Calculate current edge, normalised
             let mut e0 = j.sub(i);
