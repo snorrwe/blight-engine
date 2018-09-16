@@ -4,32 +4,37 @@ use super::vector2::Vector2;
 use std::f32::EPSILON;
 
 #[derive(Debug, Clone)]
-pub struct OBB {
-    center: Vector2,     // Center of OBB
+pub struct OBB2D {
+    center: Vector2,     // Center of OBB2D
     local: [Vector2; 2], // local x and y-axes
-    extents: Vector2,    // Positive halfwidth extents of OBB along each axis
+    extents: Vector2,    // Positive halfwidth extents of OBB2D along each axis
 }
 
-impl OBB {
+impl OBB2D {
     pub fn new(center: Vector2, local: [Vector2; 2], radius: Vector2) -> Self {
         assert!(radius.x >= 0.);
         assert!(radius.y >= 0.);
-        OBB {
+        OBB2D {
             center: center,
             local: local,
             extents: radius,
         }
     }
 
-    pub fn from_aabb(aabb: AABB) -> Self {
-        OBB {
+    pub fn from_aabb(aabb: &AABB) -> Self {
+        OBB2D {
             center: aabb.get_center().clone(),
             local: [Vector2::new(1., 0.), Vector2::new(0., 1.)],
             extents: aabb.get_radius().clone(),
         }
     }
 
-    pub fn intersects(&self, other: &OBB) -> bool {
+    pub fn intersects_aabb(&self, other: &AABB) -> bool {
+        let other = OBB2D::from_aabb(other);
+        self.intersects(&other)
+    }
+
+    pub fn intersects(&self, other: &OBB2D) -> bool {
         let mut rotation = Matrix22::uninitialised();
         let mut abs_r = Matrix22::uninitialised();
 
@@ -103,7 +108,7 @@ mod test {
 
     #[test]
     fn test_obb_intersects_itself() {
-        let obb = OBB::new(
+        let obb = OBB2D::new(
             Vector2::new(0.0, 0.0),
             [Vector2::new(1., 1.), Vector2::new(1., 1.)],
             Vector2::new(2., 3.),
@@ -114,8 +119,8 @@ mod test {
 
     #[test]
     fn test_non_rotated_obb_intersection_not_overlapping() {
-        let lhs = OBB::from_aabb(AABB::new(Vector2::new(0.0, 0.0), 2., 2.));
-        let rhs = OBB::from_aabb(AABB::new(Vector2::new(5.0, 0.0), 2., 2.));
+        let lhs = OBB2D::from_aabb(&AABB::new(Vector2::new(0.0, 0.0), 2., 2.));
+        let rhs = OBB2D::from_aabb(&AABB::new(Vector2::new(5.0, 0.0), 2., 2.));
 
         assert!(!lhs.intersects(&rhs));
         assert!(!rhs.intersects(&lhs));
@@ -129,8 +134,8 @@ mod test {
         assert!(lhs.intersects(&rhs));
         assert!(rhs.intersects(&lhs));
 
-        let lhs = OBB::from_aabb(lhs);
-        let rhs = OBB::from_aabb(rhs);
+        let lhs = OBB2D::from_aabb(&lhs);
+        let rhs = OBB2D::from_aabb(&rhs);
 
         assert!(lhs.intersects(&rhs));
         assert!(rhs.intersects(&lhs));
@@ -144,8 +149,8 @@ mod test {
         assert!(lhs.intersects(&rhs));
         assert!(rhs.intersects(&lhs));
 
-        let lhs = OBB::from_aabb(lhs);
-        let rhs = OBB::from_aabb(rhs);
+        let lhs = OBB2D::from_aabb(&lhs);
+        let rhs = OBB2D::from_aabb(&rhs);
 
         assert!(lhs.intersects(&rhs));
         assert!(rhs.intersects(&lhs));
@@ -159,8 +164,8 @@ mod test {
         assert!(lhs.intersects(&rhs));
         assert!(rhs.intersects(&lhs));
 
-        let lhs = OBB::from_aabb(lhs);
-        let rhs = OBB::from_aabb(rhs);
+        let lhs = OBB2D::from_aabb(&lhs);
+        let rhs = OBB2D::from_aabb(&rhs);
 
         assert!(lhs.intersects(&rhs));
         assert!(rhs.intersects(&lhs));
@@ -174,8 +179,8 @@ mod test {
         assert!(!lhs.intersects(&rhs));
         assert!(!rhs.intersects(&lhs));
 
-        let lhs = OBB::from_aabb(lhs);
-        let rhs = OBB::from_aabb(rhs);
+        let lhs = OBB2D::from_aabb(&lhs);
+        let rhs = OBB2D::from_aabb(&rhs);
 
         assert!(!lhs.intersects(&rhs));
         assert!(!rhs.intersects(&lhs));
