@@ -1,5 +1,6 @@
 use super::vector2::Vector2;
 
+#[derive(Debug, Clone)]
 pub struct AABB {
     center: Vector2,
     radius: Vector2,
