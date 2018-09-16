@@ -7,7 +7,7 @@ use std::f32::EPSILON;
 pub struct OBB {
     center: Vector2,     // Center of OBB
     local: [Vector2; 2], // local x and y-axes
-    e: Vector2,          // Positive halfwidth extents of OBB along each axis
+    extents: Vector2,    // Positive halfwidth extents of OBB along each axis
 }
 
 impl OBB {
@@ -17,7 +17,7 @@ impl OBB {
         OBB {
             center: center,
             local: local,
-            e: radius,
+            extents: radius,
         }
     }
 
@@ -25,7 +25,7 @@ impl OBB {
         OBB {
             center: aabb.get_center().clone(),
             local: [Vector2::new(1., 0.), Vector2::new(0., 1.)],
-            e: aabb.get_radius().clone(),
+            extents: aabb.get_radius().clone(),
         }
     }
 
@@ -61,25 +61,34 @@ impl OBB {
 
         // Test axis L = A0, L = A1
         for i in 0..2 {
-            ra = self.e.get(i);
-            rb = other.e.get(0) * abs_r.get(i, 0) + other.e.get(1) * abs_r.get(i, 1);
-            if translation.get(i).abs() > ra + rb {
+            ra = self.extents.get(i);
+            rb = other.extents.get(0) * abs_r.get(i, 0) + other.extents.get(1) * abs_r.get(i, 1);
+            let x = translation.get(i).abs();
+            if x > ra + rb {
                 return false;
             }
         }
 
         // Test axis L = B0, L = B1
         for i in 0..2 {
-            ra = self.e.get(0) * abs_r.get(0, i) + self.e.get(1) * abs_r.get(1, i);
-            rb = other.e.get(i);
-            let x = (translation.x * rotation.get(0, i) + translation.y + rotation.get(1, i)).abs();
-            if x > ra + rb {
+            const Z_AXIS_INVARIANT: f32 = 1.0;
+            ra = self.extents.x * abs_r.get(0, i)
+                + self.extents.y * abs_r.get(1, i)
+                + Z_AXIS_INVARIANT;
+            rb = other.extents.get(i);
+            let x = translation.x * rotation.get(0, i) + translation.y + rotation.get(1, i);
+            if x.abs() > ra + rb {
                 return false;
             }
         }
 
         // TODO
         // Test axis L = A0 × B0
+        // ra = self.extents.x * abs_r.get(1, 0);
+        // rb = other.extents.x * abs_r.get(0, 1);
+        // if translation.y * rotation.get(0, 0) - translation.x * rotation.get(1, 0) > ra + rb {
+        //     return false;
+        // }
         // Test axis L = A0 × B1
         // Test axis L = A1 × B0
         // Test axis L = A1 × B1
@@ -155,5 +164,20 @@ mod test {
 
         assert!(lhs.intersects(&rhs));
         assert!(rhs.intersects(&lhs));
+    }
+
+    #[test]
+    fn test_simple_non_intersecting() {
+        let lhs = AABB::new(Vector2::new(-1., 0.), 1., 1.);
+        let rhs = AABB::new(Vector2::new(1., 0.), 1., 1.);
+
+        assert!(!lhs.intersects(&rhs));
+        assert!(!rhs.intersects(&lhs));
+
+        let lhs = OBB::from_aabb(lhs);
+        let rhs = OBB::from_aabb(rhs);
+
+        assert!(!lhs.intersects(&rhs));
+        assert!(!rhs.intersects(&lhs));
     }
 }

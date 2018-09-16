@@ -6,6 +6,7 @@ trait WithData {
 
 macro_rules! matrix {
     ($c:expr, $r:expr, $data:ty, $name:ident) => {
+        #[derive(Debug, Clone)]
         pub struct $name {
             data: [$data; $c * $r],
         }
