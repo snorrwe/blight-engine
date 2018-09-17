@@ -110,11 +110,7 @@ impl OBB2D {
                 height = l1.abs() * 0.5;
             }
         });
-        OBB2D {
-            center: center,
-            local: local,
-            extents: Vector2::new(width, height),
-        }
+        OBB2D::new(center, local, Vector2::new(width, height))
     }
 
     pub fn get_center(&self) -> &Vector2 {
