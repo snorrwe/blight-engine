@@ -2,9 +2,13 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/i4h48nhyq6f5i8f4?svg=true)](https://ci.appveyor.com/project/snorrwe/blight-engine)
 
+## Supported platforms
+
+- Windows ( Currently only the Windows platform is supported. )
+
 ## Requirements
 
-- Rust nightly
+- Rust nightly compiler
 - Cargo
 
 ## Building
