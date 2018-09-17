@@ -37,12 +37,6 @@ environment:
 
 ### MSVC Toolchains ###
 
-  # Beta 64-bit MSVC
-    - channel: beta
-      target: x86_64-pc-windows-msvc
-  # Beta 32-bit MSVC
-    - channel: beta
-      target: i686-pc-windows-msvc
   # Nightly 64-bit MSVC
     - channel: nightly
       target: x86_64-pc-windows-msvc
@@ -54,12 +48,6 @@ environment:
 
 ### GNU Toolchains ###
 
-  # Beta 64-bit GNU
-    - channel: beta
-      target: x86_64-pc-windows-gnu
-  # Beta 32-bit GNU
-    - channel: beta
-      target: i686-pc-windows-gnu
   # Nightly 64-bit GNU
     - channel: nightly
       target: x86_64-pc-windows-gnu
@@ -77,9 +65,6 @@ environment:
 matrix:
   allow_failures:
     - channel: nightly
-
-# If you only care about stable channel build failures, uncomment the following line:
-    #- channel: beta
 
 ## Install Script ##
 
