@@ -13,7 +13,7 @@ impl Vector2 {
     }
 
     pub fn orthogonal(&self) -> Vector2 {
-        Vector2::new(self.y, -self.x)
+        Vector2::new(-self.y, self.x)
     }
 
     pub fn length(&self) -> f32 {

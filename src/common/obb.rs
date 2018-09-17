@@ -54,7 +54,7 @@ impl OBB2D {
         ];
 
         let result = OBB2D::from_points(&points); // Incorrect
-     ```
+       ```
      */
     pub fn from_points(points: &[Vector2]) -> Self {
         assert!(points.len() > 3, "Need at least 3 points to fit an OBB");
@@ -312,7 +312,7 @@ mod test {
             *result.get_local(),
             [
                 Vector2::new(0.70710677, -0.70710677),
-                Vector2::new(-0.70710677, -0.70710677)
+                Vector2::new(0.70710677, 0.70710677)
             ]
         );
         assert_eq!(*result.get_extents(), Vector2::new(0.70710677, 1.4142135));
@@ -327,7 +327,7 @@ mod test {
         assert_eq!(*result.get_center(), Vector2::new(7., 2.));
         assert_eq!(
             *result.get_local(),
-            [Vector2::new(-1., 0.), Vector2::new(0., 1.)]
+            [Vector2::new(-1., 0.), Vector2::new(0., -1.)]
         );
         assert_eq!(*result.get_extents(), Vector2::new(1., 1.));
     }
