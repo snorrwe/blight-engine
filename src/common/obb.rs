@@ -31,7 +31,8 @@ impl OBB2D {
 
     // Fit an OBB onto given points
     // At least 3 points are required
-    // The points must be in "clock-wise order"
+    // Note that this function has a complexity of O(n2)
+    // To avoid surprises the points must be in "clock-wise order"
     // e.g. given the points:
     // (1, 0) (0, 1), (1, 1), (0, 0)
     // a correct ordering would be
@@ -73,30 +74,27 @@ impl OBB2D {
             let e1 = e0.orthogonal();
 
             let mut min0 = 0.;
-            let mut min1 = 0.;
             let mut max0 = 0.;
+            let mut min1 = 0.;
             let mut max1 = 0.;
 
             for k in points {
                 let d = k.sub(j);
 
-                let mut dot = d.dot(&e0);
+                let handle_dot = |min: &mut f32, max: &mut f32, dot: f32| {
+                    if dot < *min {
+                        *min = dot;
+                    }
+                    if dot > *max {
+                        *max = dot;
+                    }
+                };
 
-                if dot < min0 {
-                    min0 = dot;
-                }
-                if dot > max0 {
-                    max0 = dot;
-                }
+                let mut dot = d.dot(&e0);
+                handle_dot(&mut min0, &mut max0, dot);
 
                 dot = d.dot(&e1);
-
-                if dot < min1 {
-                    min1 = dot;
-                }
-                if dot > max1 {
-                    max1 = dot;
-                }
+                handle_dot(&mut min1, &mut max1, dot);
             }
             let area = (max0 - min0) * (max1 - min1);
             if area < min_area {
@@ -125,6 +123,17 @@ impl OBB2D {
         &self.extents
     }
 
+    // Note that this method creates a new Matrix on each call
+    // Use `get_local` if you want to avoid copying
+    pub fn rotation_matrix(&self) -> Matrix22 {
+        Matrix22::new([
+            self.local[0].x,
+            self.local[0].y,
+            self.local[1].x,
+            self.local[1].y,
+        ])
+    }
+
     pub fn intersects_aabb(&self, other: &AABB) -> bool {
         let other = OBB2D::from_aabb(other);
         self.intersects(&other)
@@ -132,7 +141,7 @@ impl OBB2D {
 
     pub fn intersects(&self, other: &OBB2D) -> bool {
         let mut rotation = Matrix22::uninitialised();
-        let mut abs_r = Matrix22::uninitialised();
+        let mut abs_rot = Matrix22::uninitialised();
 
         // Compute rotation matrix expressing `other` in `self`'s coordinate
         // frame
@@ -154,7 +163,7 @@ impl OBB2D {
         // their cross product is (near) null
         for i in 0..2 {
             for j in 0..2 {
-                abs_r.set(i, j, rotation.get(i, j).abs() + EPSILON);
+                abs_rot.set(i, j, rotation.get(i, j).abs() + EPSILON);
             }
         }
 
@@ -164,7 +173,8 @@ impl OBB2D {
         // Test axis L = A0, L = A1
         for i in 0..2 {
             ra = self.extents.get(i);
-            rb = other.extents.get(0) * abs_r.get(i, 0) + other.extents.get(1) * abs_r.get(i, 1);
+            rb =
+                other.extents.get(0) * abs_rot.get(i, 0) + other.extents.get(1) * abs_rot.get(i, 1);
             let x = translation.get(i).abs();
             if x > ra + rb {
                 return false;
@@ -174,8 +184,8 @@ impl OBB2D {
         // Test axis L = B0, L = B1
         for i in 0..2 {
             const Z_AXIS_INVARIANT: f32 = 1.0;
-            ra = self.extents.x * abs_r.get(0, i)
-                + self.extents.y * abs_r.get(1, i)
+            ra = self.extents.x * abs_rot.get(0, i)
+                + self.extents.y * abs_rot.get(1, i)
                 + Z_AXIS_INVARIANT;
             rb = other.extents.get(i);
             let x = translation.x * rotation.get(0, i) + translation.y + rotation.get(1, i);
@@ -346,5 +356,12 @@ mod test {
 
         assert!(lhs.intersects(&rhs));
         assert!(rhs.intersects(&lhs));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_too_few_points_panic() {
+        let points = [Vector2::new(3.0, 1.0), Vector2::new(5.0, 3.0)];
+        let _result = OBB2D::from_points(&points);
     }
 }
