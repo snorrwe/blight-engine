@@ -23,7 +23,7 @@ impl<'a> BlightCore<'a> {
     pub fn new() -> BlightCore<'a> {
         const TARGET_MS_PER_UPDATE: u64 = 1000 / 60;
         let sdl = sdl2::init().unwrap();
-        let render_system = RenderSystem::new(&sdl, None);
+        let render_system = RenderSystem::new(&sdl, None); // TODO: pass window size as argument
         let input_system = InputSystem::new(&sdl);
         BlightCore {
             render_system: Box::new(render_system),

@@ -12,7 +12,7 @@ pub type Texture<'a> = render::Texture<'a>;
 pub type TexturePtr<'a> = Rc<Box<Texture<'a>>>;
 pub type Rect = rect::Rect;
 
-pub const WINDOW_SIZE: (u32, u32) = (800, 600); // TODO
+pub const WINDOW_SIZE: (u32, u32) = (800, 600);
 
 #[derive(Debug, Clone)]
 pub struct RenderComponent<'a> {
