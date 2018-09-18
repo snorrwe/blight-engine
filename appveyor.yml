@@ -92,7 +92,8 @@ test_script:
 
 after_test:
   - appveyor DownloadFile https://github.com/SimonKagstrom/kcov/archive/master.tar.gz -FileName kcov.tar.gz
-  - tar -g -xf kcov.tar.gz
+  - dir
+  - tar -xzf kcov.tar.gz
   - cd kcov
   - mkdir build
   - cd build
