@@ -101,3 +101,4 @@ after_test:
   - make install DESTDIR=../../kcov
   - cd ../..
   - dir kcov
+  - kcov -v
