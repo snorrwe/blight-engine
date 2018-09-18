@@ -98,6 +98,7 @@ impl<'a> RenderSystem<'a> {
         self.canvas.clear();
     }
 
+    /// Borrow the render system's texture creator
     pub fn texture_creator(&'a self) -> &'a TextureCreator {
         &self.texture_creator
     }

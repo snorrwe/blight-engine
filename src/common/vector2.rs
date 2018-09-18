@@ -12,6 +12,7 @@ impl Vector2 {
         Vector2 { x: x, y: y }
     }
 
+    /// Get a vector orthogonal to `self`
     pub fn orthogonal(&self) -> Vector2 {
         Vector2::new(-self.y, self.x)
     }
@@ -20,10 +21,12 @@ impl Vector2 {
         self.dot(self).sqrt()
     }
 
+    /// Calculate dot product
     pub fn dot(&self, other: &Vector2) -> f32 {
         (self.x * other.x + self.y * other.y)
     }
 
+    /// Subtract a vector from `self`
     pub fn sub(&self, other: &Vector2) -> Vector2 {
         Vector2::new(self.x - other.x, self.y - other.y)
     }

@@ -26,12 +26,14 @@ impl InputSystem {
         }
     }
 
+    /// Pass in a callback to handle each event in the current frame
     pub fn handle_events(&self, callback: &mut (FnMut(&Event) -> ())) {
         for event in self.events.iter() {
             callback(&event);
         }
     }
 
+    /// Get an iterator into the events of the current frame
     pub fn iter_events(&self) -> Iter<Event> {
         self.events.iter()
     }

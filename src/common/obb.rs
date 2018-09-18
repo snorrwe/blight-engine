@@ -29,34 +29,37 @@ impl OBB2D {
         }
     }
 
-    // Fit an OBB onto given points
-    // At least 3 points are required
-    // Note that this function has a complexity of O(n2)
-    // To avoid surprises the points must be in "clock-wise order"
-    // e.g. given the points:
-    // (1, 0) (0, 1), (1, 1), (0, 0)
-    // a correct ordering would be
-    // [(0, 0), (0, 1), (1, 1), (1, 0)]
-    /* ```
-        let points = [
-            Vector2::new(3.0, 1.0),
-            Vector2::new(2.0, 2.0),
-            Vector2::new(4.0, 4.0),
-            Vector2::new(5.0, 3.0),
-        ];
+    /// Fit an OBB onto given points
+    /// At least 3 points are required
+    /// Note that this function has a complexity of O(n2)
+    /// To avoid surprises the points must be in "clock-wise order"
+    /// e.g. given the points:
+    /// (1, 0) (0, 1), (1, 1), (0, 0)
+    /// a correct ordering would be
+    /// [(0, 0), (0, 1), (1, 1), (1, 0)]
+    ///```
+    /// use blight::common::vector2::Vector2;
+    /// use blight::common::obb::OBB2D;
+    ///
+    /// let points = [
+    ///     Vector2::new(3.0, 1.0),
+    ///     Vector2::new(2.0, 2.0),
+    ///     Vector2::new(4.0, 4.0),
+    ///     Vector2::new(5.0, 3.0),
+    /// ];
 
-        let result = OBB2D::from_points(&points); // Correct
+    /// let result = OBB2D::from_points(&points); // Correct
 
-        let points = [
-            Vector2::new(3.0, 1.0),
-            Vector2::new(5.0, 3.0),
-            Vector2::new(4.0, 4.0),
-            Vector2::new(2.0, 2.0),
-        ];
+    /// let points = [
+    ///     Vector2::new(3.0, 1.0),
+    ///     Vector2::new(5.0, 3.0),
+    ///     Vector2::new(4.0, 4.0),
+    ///     Vector2::new(2.0, 2.0),
+    /// ];
 
-        let result = OBB2D::from_points(&points); // Incorrect
-       ```
-     */
+    /// let result = OBB2D::from_points(&points); // Incorrect
+    ///```
+    ///
     pub fn from_points(points: &[Vector2]) -> Self {
         assert!(points.len() > 3, "Need at least 3 points to fit an OBB");
         let mut min_area = MAX;
@@ -115,7 +118,8 @@ impl OBB2D {
         &self.center
     }
 
-    pub fn get_local(&self) -> &[Vector2] {
+    /// Borrow the local coordinate space matrix
+    pub fn get_local(&self) -> &[Vector2; 2] {
         &self.local
     }
 
@@ -123,8 +127,8 @@ impl OBB2D {
         &self.extents
     }
 
-    // Note that this method creates a new Matrix on each call
-    // Use `get_local` if you want to avoid copying
+    /// Note that this method creates a new Matrix on each call
+    /// Use `get_local` if you want to avoid copying
     pub fn rotation_matrix(&self) -> Matrix22 {
         Matrix22::new([
             self.local[0].x,
@@ -134,11 +138,13 @@ impl OBB2D {
         ])
     }
 
+    /// Check if OBB2D intersects with an AABB
     pub fn intersects_aabb(&self, other: &AABB) -> bool {
         let other = OBB2D::from_aabb(other);
         self.intersects(&other)
     }
 
+    /// Check if OBB2D intersects with another OBB2D
     pub fn intersects(&self, other: &OBB2D) -> bool {
         let mut rotation = Matrix22::uninitialised();
         let mut abs_rot = Matrix22::uninitialised();
