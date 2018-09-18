@@ -54,10 +54,14 @@ pub enum VideoError {
 }
 
 impl<'a> RenderSystem<'a> {
-    pub fn new(sdl_context: &Sdl) -> RenderSystem<'a> {
+    pub fn new(sdl_context: &Sdl, window_size: Option<(u32, u32)>) -> RenderSystem<'a> {
+        let window_size = match window_size {
+            Some(x) => x,
+            None => WINDOW_SIZE,
+        };
         let video_subsystem = sdl_context.video().unwrap();
         let window = video_subsystem
-            .window("Blight Engine", WINDOW_SIZE.0, WINDOW_SIZE.1)
+            .window("Blight Engine", window_size.0, window_size.1)
             .position_centered()
             .opengl()
             .build()
@@ -171,7 +175,7 @@ mod test {
     #[bench]
     fn simple_render_bunch<'a>(bencher: &mut Bencher) {
         let sdl = sdl2::init().unwrap();
-        let mut render_system = RenderSystem::new(&sdl);
+        let mut render_system = RenderSystem::new(&sdl, None);
         let render_ptr = &mut render_system as *mut RenderSystem;
         unsafe {
             let mut components = vec![];
