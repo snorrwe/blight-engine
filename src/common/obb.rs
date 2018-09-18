@@ -3,6 +3,7 @@ use super::matrix::Matrix22;
 use super::vector2::Vector2;
 use std::f32::{EPSILON, MAX};
 
+/// 2D Oriented Bounding Box
 #[derive(Debug, Clone)]
 pub struct OBB2D {
     center: Vector2,     // Center of OBB2D

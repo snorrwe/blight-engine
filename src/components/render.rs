@@ -1,6 +1,7 @@
 use super::super::systems::render::{Rect, RenderSystem, Texture};
 use std::ptr;
 
+/// Represents a renderable object
 pub struct RenderComponent<'a> {
     texture: *const Texture<'a>,
     position: Rect,

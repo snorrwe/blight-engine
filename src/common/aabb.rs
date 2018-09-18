@@ -1,5 +1,6 @@
 use super::vector2::Vector2;
 
+/// Axis Aligned Bounding Box
 #[derive(Debug, Clone)]
 pub struct AABB {
     center: Vector2,

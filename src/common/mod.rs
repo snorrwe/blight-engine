@@ -1,5 +1,5 @@
 pub mod aabb;
 pub mod vector2;
-pub mod sphere;
+pub mod circle;
 pub mod obb;
 pub mod matrix;
