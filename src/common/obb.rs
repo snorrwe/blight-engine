@@ -69,48 +69,48 @@ impl OBB2D {
         let mut height = 0.;
         let mut it = points.iter();
         it.next();
-        it.zip(points.iter()).for_each(|(i, j)| {
-            // Calculate current edge, normalised
-            let mut e0 = j.sub(i);
-            e0 = (1. / e0.length()) * e0;
+        it.zip(points.iter())
+            .for_each(|(last_point, current_point)| {
+                // Calculate current edge, normalised
+                let mut edge = current_point.sub(last_point);
+                edge = (1. / edge.length()) * edge;
 
-            let e1 = e0.orthogonal();
+                let edge_orth = edge.orthogonal();
 
-            let mut min0 = 0.;
-            let mut max0 = 0.;
-            let mut min1 = 0.;
-            let mut max1 = 0.;
+                let mut min0 = 0.;
+                let mut max0 = 0.;
+                let mut min1 = 0.;
+                let mut max1 = 0.;
 
-            for k in points {
-                let d = k.sub(j);
+                for k in points {
+                    let dist = k.sub(current_point);
 
-                let handle_dot = |min: &mut f32, max: &mut f32, dot: f32| {
-                    if dot < *min {
-                        *min = dot;
-                    }
-                    if dot > *max {
-                        *max = dot;
-                    }
-                };
+                    let handle_dot = |e: &Vector2, min: &mut f32, max: &mut f32| {
+                        let dot = dist.dot(&e);
+                        if dot < *min {
+                            *min = dot;
+                        }
+                        if dot > *max {
+                            *max = dot;
+                        }
+                    };
 
-                let mut dot = d.dot(&e0);
-                handle_dot(&mut min0, &mut max0, dot);
-
-                dot = d.dot(&e1);
-                handle_dot(&mut min1, &mut max1, dot);
-            }
-            let area = (max0 - min0) * (max1 - min1);
-            if area < min_area {
-                min_area = area;
-                let l0 = min0 + max0;
-                let l1 = min1 + max1;
-                center = j.clone() + 0.5 * (l0 * e0.clone() + l1 * e1.clone());
-                local[0] = e0;
-                local[1] = e1;
-                width = l0.abs() * 0.5;
-                height = l1.abs() * 0.5;
-            }
-        });
+                    handle_dot(&edge, &mut min0, &mut max0);
+                    handle_dot(&edge_orth, &mut min1, &mut max1);
+                }
+                let area = (max0 - min0) * (max1 - min1);
+                if area < min_area {
+                    min_area = area;
+                    let l0 = min0 + max0;
+                    let l1 = min1 + max1;
+                    center =
+                        current_point.clone() + 0.5 * (l0 * edge.clone() + l1 * edge_orth.clone());
+                    local[0] = edge;
+                    local[1] = edge_orth;
+                    width = l0.abs() * 0.5;
+                    height = l1.abs() * 0.5;
+                }
+            });
         OBB2D::new(center, local, Vector2::new(width, height))
     }
 
