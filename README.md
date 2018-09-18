@@ -19,7 +19,7 @@ cargo build --examples # Build examples
 cargo build --release  # Build in Release mode
 ```
 
-## Running the tests
+## Running the test suit
 
 ```
 cargo test
