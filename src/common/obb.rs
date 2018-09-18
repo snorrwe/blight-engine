@@ -65,17 +65,16 @@ impl OBB2D {
         let mut min_area = MAX;
         let mut center: Vector2 = Vector2::new(0., 0.);
         let mut local: [Vector2; 2] = [Vector2::new(1., 0.), Vector2::new(0., 1.)];
-        let mut width = 0.;
-        let mut height = 0.;
+        let mut dimensions = [0., 0.];
         let mut it = points.iter();
         it.next();
         it.zip(points.iter())
             .for_each(|(last_point, current_point)| {
                 // Calculate current edge, normalised
-                let mut edge = current_point.sub(last_point);
-                edge = (1. / edge.length()) * edge;
+                let mut edge_norm = current_point.sub(last_point);
+                edge_norm = (1. / edge_norm.length()) * edge_norm;
 
-                let edge_orth = edge.orthogonal();
+                let edge_orth = edge_norm.orthogonal();
 
                 let mut min0 = 0.;
                 let mut max0 = 0.;
@@ -95,7 +94,7 @@ impl OBB2D {
                         }
                     };
 
-                    handle_dot(&edge, &mut min0, &mut max0);
+                    handle_dot(&edge_norm, &mut min0, &mut max0);
                     handle_dot(&edge_orth, &mut min1, &mut max1);
                 }
                 let area = (max0 - min0) * (max1 - min1);
@@ -103,15 +102,14 @@ impl OBB2D {
                     min_area = area;
                     let l0 = min0 + max0;
                     let l1 = min1 + max1;
-                    center =
-                        current_point.clone() + 0.5 * (l0 * edge.clone() + l1 * edge_orth.clone());
-                    local[0] = edge;
+                    center = current_point.clone()
+                        + 0.5 * (l0 * edge_norm.clone() + l1 * edge_orth.clone());
+                    local[0] = edge_norm;
                     local[1] = edge_orth;
-                    width = l0.abs() * 0.5;
-                    height = l1.abs() * 0.5;
+                    dimensions = [l0.abs() * 0.5, l1.abs() * 0.5];
                 }
             });
-        OBB2D::new(center, local, Vector2::new(width, height))
+        OBB2D::new(center, local, Vector2::from_array(dimensions))
     }
 
     pub fn get_center(&self) -> &Vector2 {
@@ -146,11 +144,9 @@ impl OBB2D {
 
     /// Check if OBB2D intersects with another OBB2D
     pub fn intersects(&self, other: &OBB2D) -> bool {
-        let mut rotation = Matrix22::uninitialised();
-        let mut abs_rot = Matrix22::uninitialised();
-
         // Compute rotation matrix expressing `other` in `self`'s coordinate
         // frame
+        let mut rotation = Matrix22::uninitialised();
         for i in 0..2 {
             for j in 0..2 {
                 rotation.set(i, j, self.local[i].dot(&other.local[j]));
@@ -167,6 +163,7 @@ impl OBB2D {
         // Compute common subexpressions. Add in an epsilon term to
         // counteract arithmetic errors when two edges are parallel and
         // their cross product is (near) null
+        let mut abs_rot = Matrix22::uninitialised();
         for i in 0..2 {
             for j in 0..2 {
                 abs_rot.set(i, j, rotation.get(i, j).abs() + EPSILON);
