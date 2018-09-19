@@ -33,9 +33,26 @@ impl Vector2 {
         (self.x * other.x + self.y * other.y)
     }
 
-    /// Subtract a vector from `self`
+    /// Subtract a vector from `self` returning a new vector
     pub fn sub(&self, other: &Vector2) -> Vector2 {
         Vector2::new(self.x - other.x, self.y - other.y)
+    }
+
+    /// Subtract a vector from `self`
+    pub fn sub_mut(&mut self, other: &Vector2) {
+        self.x -= other.x;
+        self.y -= other.y;
+    }
+
+    /// Add a vector to `self` returning a new vector
+    pub fn add(&self, other: &Vector2) -> Vector2 {
+        Vector2::new(self.x + other.x, self.y + other.y)
+    }
+
+    /// Add a vector to `self`
+    pub fn add_mut(&mut self, other: &Vector2) {
+        self.x += other.x;
+        self.y += other.y;
     }
 
     pub fn get(&self, i: usize) -> f32 {

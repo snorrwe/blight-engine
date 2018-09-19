@@ -37,6 +37,30 @@ impl AABB {
         (self.center.x - other.center.x).abs() <= self.radius.x + other.radius.x
             && (self.center.y - other.center.y).abs() <= self.radius.y + other.radius.y
     }
+
+    /// Calculate the closest point on the AABB to the given point
+    pub fn closest_point(&self, point: &Vector2) -> Vector2 {
+        let min = self.center.sub(&self.radius);
+        let max = self.center.add(&self.radius);
+        let mut x = point.x;
+        let mut y = point.y;
+
+        if x < min.x {
+            x = min.x;
+        }
+        if x > max.x {
+            x = max.x;
+        }
+
+        if y < min.y {
+            y = min.y;
+        }
+        if y > max.y {
+            y = max.y;
+        }
+
+        Vector2::new(x, y)
+    }
 }
 
 #[cfg(test)]
@@ -95,5 +119,25 @@ mod test {
     #[should_panic]
     fn test_height_has_to_be_positive() {
         AABB::new(Vector2::new(0., 0.), 1., -1.);
+    }
+
+    #[test]
+    fn test_closest_points() {
+        // tuples of input and expected output
+        let test_cases = [
+            (Vector2::new(-21., 11.), Vector2::new(-20., 10.)),
+            (Vector2::new(-22., 5.), Vector2::new(-20., 5.)),
+            (Vector2::new(-21., -11.), Vector2::new(-20., -10.)),
+            (Vector2::new(25., -8.), Vector2::new(20., -8.)),
+            (Vector2::new(10., 15.), Vector2::new(10., 10.)),
+            (Vector2::new(42., 18.), Vector2::new(20., 10.)),
+        ];
+
+        let aabb = AABB::new(Vector2::new(0., 0.), 40., 20.);
+
+        for (input, expected) in test_cases.iter() {
+            let actual = aabb.closest_point(&input);
+            assert_eq!(actual, *expected);
+        }
     }
 }
