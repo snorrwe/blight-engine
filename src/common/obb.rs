@@ -147,7 +147,10 @@ impl OBB2D {
     pub fn intersects(&self, other: &OBB2D) -> bool {
         // Compute rotation matrix expressing `other` in `self`'s coordinate
         // frame
-        let mut rotation = Matrix22::uninitialised();
+        let mut rotation: Matrix22;
+        unsafe {
+            rotation = Matrix22::uninitialized();
+        }
         for i in 0..2 {
             for j in 0..2 {
                 rotation.set(i, j, self.local[i].dot(&other.local[j]));
@@ -164,7 +167,11 @@ impl OBB2D {
         // Compute common subexpressions. Add in an epsilon term to
         // counteract arithmetic errors when two edges are parallel and
         // their cross product is (near) null
-        let mut abs_rot = Matrix22::uninitialised();
+
+        let mut abs_rot: Matrix22;
+        unsafe {
+            abs_rot = Matrix22::uninitialized();
+        }
         for i in 0..2 {
             for j in 0..2 {
                 abs_rot.set(i, j, rotation.get(i, j).abs() + EPSILON);

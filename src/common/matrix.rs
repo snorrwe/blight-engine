@@ -23,20 +23,16 @@ macro_rules! matrix {
         }
 
         impl $name {
-            const COLUMNS: usize = $c;
-            const ROWS: usize = $r;
-            const SIZE: usize = $c * $r;
+            pub const COLUMNS: usize = $c;
+            pub const ROWS: usize = $r;
+            pub const SIZE: usize = $c * $r;
 
             pub fn new(data: [$data; $c * $r]) -> Self {
                 $name { data: data }
             }
 
-            pub fn uninitialised() -> Self {
-                let data: [$data; Self::SIZE];
-                unsafe {
-                    data = mem::uninitialized();
-                }
-                $name { data: data }
+            pub unsafe fn uninitialized() -> Self {
+                Self::new(mem::uninitialized())
             }
 
             pub fn get(&self, col: usize, row: usize) -> &$data {
