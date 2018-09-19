@@ -140,4 +140,11 @@ mod test {
             assert_eq!(actual, *expected);
         }
     }
+
+    #[test]
+    fn test_closest_point_intersecting_aabb() {
+        let aabb = AABB::new(Vector2::new(0., 0.), 40., 20.);
+        let actual = aabb.closest_point(&Vector2::new(5., 5.));
+        assert_eq!(actual, Vector2::new(5., 5.));
+    }
 }
