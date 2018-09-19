@@ -65,7 +65,7 @@ impl Vector2 {
         }
     }
 
-    pub fn get_mut(&mut self, i: usize) -> &mut f32 {
+    pub fn get_mut<'a>(&'a mut self, i: usize) -> &'a mut f32 {
         if i == 0 {
             &mut self.x
         } else if i == 1 {
