@@ -25,12 +25,13 @@ macro_rules! matrix {
         impl $name {
             pub const COLUMNS: usize = $c;
             pub const ROWS: usize = $r;
-            pub const SIZE: usize = $c * $r;
+            pub const SIZE: usize = Self::COLUMNS * Self::ROWS;
 
-            pub fn new(data: [$data; $c * $r]) -> Self {
+            pub fn new(data: [$data; Self::SIZE]) -> Self {
                 $name { data: data }
             }
 
+            /// Return a new Matrix with uninitialized data
             pub unsafe fn uninitialized() -> Self {
                 Self::new(mem::uninitialized())
             }
