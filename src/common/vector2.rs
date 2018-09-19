@@ -65,6 +65,16 @@ impl Vector2 {
         }
     }
 
+    pub fn get_mut(&mut self, i: usize) -> &mut f32 {
+        if i == 0 {
+            &mut self.x
+        } else if i == 1 {
+            &mut self.y
+        } else {
+            panic!("Vector index out of range!")
+        }
+    }
+
     pub fn set(&mut self, x: f32, y: f32) {
         self.x = x;
         self.y = y;

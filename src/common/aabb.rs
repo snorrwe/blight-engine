@@ -40,26 +40,25 @@ impl AABB {
 
     /// Calculate the closest point on the AABB to the given point
     pub fn closest_point(&self, point: &Vector2) -> Vector2 {
+        self.closest_point_mut(point.clone())
+    }
+
+    /// Calculate the closest point on the AABB to the given point, consuming the original point
+    pub fn closest_point_mut(&self, mut result: Vector2) -> Vector2 {
         let min = self.center.sub(&self.radius);
         let max = self.center.add(&self.radius);
-        let mut x = point.x;
-        let mut y = point.y;
 
-        if x < min.x {
-            x = min.x;
-        }
-        if x > max.x {
-            x = max.x;
-        }
-
-        if y < min.y {
-            y = min.y;
-        }
-        if y > max.y {
-            y = max.y;
+        for i in 0..2 {
+            let v = result.get_mut(i);
+            if *v < min.get(i) {
+                *v = min.get(i).clone();
+            }
+            if *v > max.get(i) {
+                *v = max.get(i).clone();
+            }
         }
 
-        Vector2::new(x, y)
+        result
     }
 }
 
