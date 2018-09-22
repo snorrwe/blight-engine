@@ -176,6 +176,7 @@ mod test {
     fn simple_render_bunch<'a>(bencher: &mut Bencher) {
         let sdl = sdl2::init().unwrap();
         let mut render_system = RenderSystem::new(&sdl, None);
+        render_system.set_background_color(Some(Color::RGB(255, 255, 255)));
         let render_ptr = &mut render_system as *mut RenderSystem;
         unsafe {
             let mut components = vec![];
