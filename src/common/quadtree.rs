@@ -370,7 +370,6 @@ mod test {
     }
 
     fn init_benchmark(size: usize) -> Quadtree<SimpleType> {
-        let rng = thread_rng();
         let mut elements = vec![];
         let mut rng = thread_rng();
         for _ in 0..size {
