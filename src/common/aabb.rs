@@ -60,6 +60,10 @@ impl AABB {
 
         result
     }
+
+    pub fn contains(&self, point: &Vector2) -> bool {
+        self.closest_point(point) == *point
+    }
 }
 
 #[cfg(test)]
