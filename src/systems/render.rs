@@ -187,13 +187,15 @@ mod test {
             for _ in 0..100 {
                 let mut component = (*render_ptr).create_component();
                 component.set_texture(&mut texture);
-                let x = rng.gen_range::<i32>(50, 500);
-                let y = rng.gen_range::<i32>(50, 500);
-                component.set_position(Rect::new(x, y, TEXTURE_SIZE, TEXTURE_SIZE));
                 components.push(component);
             }
 
             bencher.iter(|| {
+                components.iter_mut().for_each(|component| {
+                    let x = rng.gen_range::<i32>(50, 500);
+                    let y = rng.gen_range::<i32>(50, 500);
+                    component.set_position(Rect::new(x, y, TEXTURE_SIZE, TEXTURE_SIZE));
+                });
                 render_system.render();
             })
         }
