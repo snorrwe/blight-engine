@@ -1,6 +1,7 @@
 use super::super::systems::render::{RenderComponentInner, RenderSystem};
 use std::ops::{Deref, DerefMut};
 
+/// Proxy object to RenderComponents
 #[derive(Debug, Clone)]
 pub struct RenderComponent<'a> {
     id: usize,

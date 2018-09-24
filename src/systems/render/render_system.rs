@@ -50,6 +50,7 @@ impl<'a> RenderSystem<'a> {
         self.background_color = background.unwrap_or(Color::RGB(0, 0, 0));
     }
 
+    /// Render all the components in the system
     pub fn render(&mut self) {
         self.clear();
         self.render_components
