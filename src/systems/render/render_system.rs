@@ -5,6 +5,7 @@ use super::*;
 
 pub const WINDOW_SIZE: (u32, u32) = (800, 600);
 
+/// Handles rendering
 pub struct RenderSystem<'a> {
     canvas: Canvas,
     texture_creator: TextureCreator,
@@ -121,7 +122,7 @@ impl<'a> RenderSystem<'a> {
         });
     }
 
-    pub fn clear_components(&mut self) {
+    pub fn purge_components(&mut self) {
         self.render_components.clear();
     }
 }
