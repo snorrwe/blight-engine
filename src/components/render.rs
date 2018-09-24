@@ -1,38 +1,39 @@
-use super::super::systems::render::{Rect, RenderSystem, Texture};
-use std::ptr;
+use super::super::systems::render::{RenderComponentInner, RenderSystem};
+use std::ops::{Deref, DerefMut};
 
-/// Represents a renderable object
+#[derive(Debug, Clone)]
 pub struct RenderComponent<'a> {
-    texture: *const Texture<'a>,
-    position: Rect,
-    render_system: *mut RenderSystem<'a>,
     id: usize,
+    system: *mut RenderSystem<'a>,
 }
 
 impl<'a> RenderComponent<'a> {
-    pub fn new(render_system: *mut RenderSystem<'a>, id: usize) -> RenderComponent<'a> {
+    pub fn new(id: usize, system: *mut RenderSystem<'a>) -> Self {
         RenderComponent {
-            render_system: render_system,
-            texture: ptr::null(),
-            position: Rect::new(0, 0, 0, 0),
             id: id,
+            system: system,
         }
     }
+}
 
-    pub fn get_id(&self) -> usize {
-        self.id
+impl<'a> DerefMut for RenderComponent<'a> {
+    fn deref_mut(&mut self) -> &mut RenderComponentInner<'a> {
+        unsafe { (*self.system).get_component_by_id(self.id) }
     }
+}
 
-    pub unsafe fn render(&mut self) {
-        assert!(!self.texture.is_null());
-        (*self.render_system).render_texture(&*self.texture, &self.position);
+impl<'a> Deref for RenderComponent<'a> {
+    type Target = RenderComponentInner<'a>;
+
+    fn deref(&self) -> &RenderComponentInner<'a> {
+        unsafe { (*self.system).get_component_by_id(self.id) }
     }
+}
 
-    pub fn set_position(&mut self, position: Rect) {
-        self.position = position;
-    }
-
-    pub fn set_texture(&mut self, texture: *const Texture<'a>) {
-        self.texture = texture;
+impl<'a> Drop for RenderComponent<'a> {
+    fn drop(&mut self) {
+        unsafe {
+            (*self.system).delete_components_by_ids(&[self.id]);
+        }
     }
 }

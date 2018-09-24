@@ -1,46 +1,9 @@
-use sdl2::pixels::Color;
-use sdl2::{rect, render, video, Sdl};
-use std::ops::{Deref, DerefMut};
-use std::rc::Rc;
+pub use super::super::super::components::render::RenderComponent;
+pub use super::render_component::RenderComponentInner;
 
-use super::super::components::render::RenderComponent as RenderComponentInner;
-
-pub type Window = video::Window;
-pub type Canvas = render::Canvas<Window>;
-pub type TextureCreator = render::TextureCreator<video::WindowContext>;
-pub type Texture<'a> = render::Texture<'a>;
-pub type TexturePtr<'a> = Rc<Box<Texture<'a>>>;
-pub type Rect = rect::Rect;
+use super::*;
 
 pub const WINDOW_SIZE: (u32, u32) = (800, 600);
-
-#[derive(Debug, Clone)]
-pub struct RenderComponent<'a> {
-    id: usize,
-    system: *mut RenderSystem<'a>,
-}
-
-impl<'a> DerefMut for RenderComponent<'a> {
-    fn deref_mut(&mut self) -> &mut RenderComponentInner<'a> {
-        unsafe { (*self.system).get_component_by_id(self.id) }
-    }
-}
-
-impl<'a> Deref for RenderComponent<'a> {
-    type Target = RenderComponentInner<'a>;
-
-    fn deref(&self) -> &RenderComponentInner<'a> {
-        unsafe { (*self.system).get_component_by_id(self.id) }
-    }
-}
-
-impl<'a> Drop for RenderComponent<'a> {
-    fn drop(&mut self) {
-        unsafe {
-            (*self.system).delete_components_by_ids(&[self.id]);
-        }
-    }
-}
 
 pub struct RenderSystem<'a> {
     canvas: Canvas,
@@ -126,10 +89,7 @@ impl<'a> RenderSystem<'a> {
             NEXT_ID += 1;
             let result = RenderComponentInner::new(self as *mut RenderSystem<'a>, NEXT_ID.clone());
             self.render_components.push(result);
-            RenderComponent {
-                id: NEXT_ID.clone(),
-                system: self as *mut RenderSystem,
-            }
+            RenderComponent::new(NEXT_ID.clone(), self as *mut RenderSystem)
         }
     }
 
