@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["BlightCore","The hearth of the Blight Engine It's responsible for the game loop"]]});

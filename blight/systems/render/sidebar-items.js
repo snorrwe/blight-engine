@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["WINDOW_SIZE",""]],"enum":[["VideoError",""]],"mod":[["render_component",""]],"struct":[["RenderSystem","Handles rendering"]],"type":[["Canvas",""],["Rect",""],["Texture",""],["TextureCreator",""],["TexturePtr",""],["Window",""]]});

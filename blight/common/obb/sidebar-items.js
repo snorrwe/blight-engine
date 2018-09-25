@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["OBB2D","2D Oriented Bounding Box"]]});

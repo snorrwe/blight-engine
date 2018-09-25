@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["RenderComponent","Proxy object to RenderComponents"]]});
