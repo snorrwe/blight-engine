@@ -23,14 +23,26 @@ impl<'r> Spacial for CollisionComponent<'r> {
 pub struct CollisionSystem<'a> {
     components: Vec<CollisionComponent<'a>>,
     world: Quadtree<CollisionComponent<'a>>,
+    center: Vector2,
 }
 
 impl<'a> CollisionSystem<'a> {
     pub fn new(boundary: AABB) -> Self {
         Self {
             components: vec![],
+            center: boundary.get_center().clone(),
             world: Quadtree::new(boundary),
         }
+    }
+
+    /// Sets the center of the world. This does not allocate additional memory
+    pub fn set_center(&mut self, position: Vector2) {
+        self.center = position;
+    }
+
+    /// Sets the boundary of the world, note that this requires reallocating the world's memory
+    pub fn set_boundary(&mut self, boundary: AABB) {
+        self.world = Quadtree::new(boundary);
     }
 
     pub fn update(&mut self) {
