@@ -2,6 +2,7 @@ pub use super::aabb::AABB;
 pub use super::vector2::Vector2;
 use std::mem;
 
+#[derive(Debug)]
 pub enum QuadtreeError {
     OutOfBounds,
     Unknown,
@@ -10,10 +11,11 @@ pub enum QuadtreeError {
 const CAPACITY: usize = 4;
 
 pub trait Spacial {
-    fn position(&self) -> &Vector2;
+    fn position<'a>(&'a self) -> &'a Vector2;
 }
 
-///
+/// Quadtee data structure for efficient spacial queries
+#[derive(Debug)]
 pub struct Quadtree<T>
 where
     T: Spacial,
@@ -30,7 +32,7 @@ where
 {
     pub fn new(boundary: AABB) -> Self {
         unsafe {
-             Self {
+            Self {
                 boundary: boundary,
                 points: mem::uninitialized(),
                 len: 0,
@@ -78,8 +80,11 @@ where
         }
     }
 
-    /// Insert a vector of elements
-    pub fn insert_many(&mut self, points: Vec<T>) -> Result<(), QuadtreeError> {
+    /// Insert a range of elements
+    pub fn insert_many<I>(&mut self, points: I) -> Result<(), QuadtreeError>
+    where
+        I: Iterator<Item = T>,
+    {
         for point in points {
             let result = self.insert(point);
             if result.is_err() {
@@ -146,6 +151,14 @@ where
             child.query_range_static(range, result);
         });
     }
+
+    /// Clear the tree, retaining already allocated memory for later use
+    pub fn clear(&mut self) {
+        self.len = 0;
+        if let Some(ref mut children) = self.children {
+            children.iter_mut().for_each(|child| child.clear());
+        }
+    }
 }
 
 #[cfg(test)]
@@ -195,7 +208,7 @@ mod test {
         let boundary = AABB::from_radius(Vector2::new(0., 0.), Vector2::new(25., 20.));
         let mut tree = Quadtree::<SimpleType>::new(boundary);
 
-        let points = vec![
+        let mut points = vec![
             SimpleType {
                 pos: Vector2::new(20., 0.),
                 value: 0,
@@ -230,7 +243,7 @@ mod test {
             },
         ];
 
-        let result = tree.insert_many(points);
+        let result = tree.insert_many(points.drain(..));
 
         assert!(result.is_ok())
     }
@@ -275,7 +288,7 @@ mod test {
         let boundary = AABB::from_radius(Vector2::new(0., 0.), Vector2::new(25., 20.));
         let mut tree = Quadtree::<SimpleType>::new(boundary);
 
-        let points = vec![
+        let mut points = vec![
             SimpleType {
                 pos: Vector2::new(20., 0.),
                 value: 0,
@@ -310,7 +323,7 @@ mod test {
             },
         ];
 
-        let result = tree.insert_many(points);
+        let result = tree.insert_many(points.drain(..));
 
         assert!(result.is_ok());
 
@@ -380,7 +393,7 @@ mod test {
             Vector2::new(0., 0.),
             Vector2::new(50., 50.),
         ));
-        let result = tree.insert_many(elements);
+        let result = tree.insert_many(elements.drain(..));
         assert!(result.is_ok());
         tree
     }
