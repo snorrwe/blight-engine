@@ -54,11 +54,12 @@ impl<'a> RenderSystem<'a> {
     /// Render all the components in the system
     pub fn render(&mut self) {
         self.clear();
-        self.render_components
-            .iter_mut()
-            .for_each(|component| unsafe {
-                component.render();
-            });
+        // Take ownership of `render_components`
+        let components = std::mem::replace(&mut self.render_components, vec![]);
+        components.iter().for_each(|component| unsafe {
+            self.render_texture(&*component.texture, &component.position);
+        });
+        self.render_components = components;
         self.canvas.present();
     }
 
@@ -89,7 +90,7 @@ impl<'a> RenderSystem<'a> {
         unsafe {
             assert!(NEXT_ID < <usize>::max_value());
             NEXT_ID += 1;
-            let result = RenderComponentInner::new(self as *mut RenderSystem<'a>, NEXT_ID.clone());
+            let result = RenderComponentInner::new(NEXT_ID.clone());
             self.render_components.push(result);
             RenderComponent::new(NEXT_ID.clone(), self as *mut RenderSystem)
         }
@@ -102,7 +103,7 @@ impl<'a> RenderSystem<'a> {
         self.render_components
             .iter_mut()
             .filter(|component| {
-                let id = component.get_id();
+                let id = component.id;
                 ids.iter().any(|i| *i == id)
             })
             .collect()
@@ -111,13 +112,13 @@ impl<'a> RenderSystem<'a> {
     pub fn get_component_by_id(&'a mut self, id: usize) -> &mut RenderComponentInner<'a> {
         self.render_components
             .iter_mut()
-            .find(|component| component.get_id() == id)
+            .find(|component| component.id == id)
             .expect(&format!("No component exists by the id [{}]", id))
     }
 
     pub fn delete_components_by_ids(&mut self, ids: &[usize]) {
         self.render_components.retain(|component| {
-            let id = component.get_id();
+            let id = component.id;
             ids.iter().any(|i| *i != id)
         });
     }
@@ -148,7 +149,7 @@ mod test {
             let mut rng = thread_rng();
             for _ in 0..100 {
                 let mut component = (*render_ptr).create_component();
-                component.set_texture(&mut texture);
+                component.texture = &mut texture;
                 components.push(component);
             }
 
@@ -156,7 +157,7 @@ mod test {
                 components.iter_mut().for_each(|component| {
                     let x = rng.gen_range::<i32>(50, 500);
                     let y = rng.gen_range::<i32>(50, 500);
-                    component.set_position(Rect::new(x, y, TEXTURE_SIZE, TEXTURE_SIZE));
+                    component.position = Rect::new(x, y, TEXTURE_SIZE, TEXTURE_SIZE);
                 });
                 render_system.render();
             })

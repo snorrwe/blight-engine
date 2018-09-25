@@ -207,12 +207,12 @@ impl<'a> GameOfLife<'a> {
             if !self.cells.contains_key(&i) {
                 let mut component = (*renderer).create_component();
                 let x = i as u32;
-                component.set_position(Rect::new(
+                component.position = Rect::new(
                     ((x % PLAYGROUND_WIDTH) * CELL_SIZE) as i32,
                     ((x / PLAYGROUND_WIDTH) * CELL_SIZE) as i32,
                     CELL_SIZE,
                     CELL_SIZE,
-                ));
+                );
                 self.cells.insert(i, component);
             }
             let mut component = self.cells.get_mut(&i).unwrap();
@@ -221,7 +221,7 @@ impl<'a> GameOfLife<'a> {
             } else {
                 &self.textures.1
             };
-            component.set_texture(texture);
+            component.texture = texture;
         }
         self.blinks = (self.blinks + 1) % BLINK_THRESHOLD;
     }
