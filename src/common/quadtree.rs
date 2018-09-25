@@ -29,16 +29,14 @@ where
     T: Spacial,
 {
     pub fn new(boundary: AABB) -> Self {
-        let result: Self;
         unsafe {
-            result = Self {
+             Self {
                 boundary: boundary,
                 points: mem::uninitialized(),
                 len: 0,
                 children: None,
             }
         }
-        result
     }
 
     /// Insert a single element into the tree
@@ -67,10 +65,7 @@ where
 
         match vessel {
             Some(vessel) => vessel.insert(point),
-            None => {
-                // This should not happen
-                return Err(QuadtreeError::Unknown);
-            }
+            None => Err(QuadtreeError::Unknown),
         }
     }
 
@@ -179,7 +174,7 @@ mod test {
 
     #[test]
     fn test_insert_returns_err_if_point_is_out_of_bounds() {
-        let boundary = AABB::new(Vector2::new(0., 0.), 50., 40.);
+        let boundary = AABB::from_radius(Vector2::new(0., 0.), Vector2::new(25., 20.));
         let mut tree = Quadtree::<SimpleType>::new(boundary);
 
         let result = tree.insert(SimpleType {
@@ -197,7 +192,7 @@ mod test {
 
     #[test]
     fn test_can_insert_many() {
-        let boundary = AABB::new(Vector2::new(0., 0.), 50., 40.);
+        let boundary = AABB::from_radius(Vector2::new(0., 0.), Vector2::new(25., 20.));
         let mut tree = Quadtree::<SimpleType>::new(boundary);
 
         let points = vec![
@@ -242,7 +237,7 @@ mod test {
 
     #[test]
     fn test_can_find_single_element() {
-        let boundary = AABB::new(Vector2::new(0., 0.), 50., 40.);
+        let boundary = AABB::from_radius(Vector2::new(0., 0.), Vector2::new(25., 20.));
         let mut tree = Quadtree::<SimpleType>::new(boundary);
 
         let result = tree.insert(SimpleType {
@@ -260,7 +255,7 @@ mod test {
 
     #[test]
     fn test_returns_empty_if_none_match() {
-        let boundary = AABB::new(Vector2::new(0., 0.), 50., 40.);
+        let boundary = AABB::from_radius(Vector2::new(0., 0.), Vector2::new(25., 20.));
         let mut tree = Quadtree::<SimpleType>::new(boundary);
 
         let result = tree.insert(SimpleType {
@@ -277,7 +272,7 @@ mod test {
 
     #[test]
     fn test_can_find_correct_elements() {
-        let boundary = AABB::new(Vector2::new(0., 0.), 50., 40.);
+        let boundary = AABB::from_radius(Vector2::new(0., 0.), Vector2::new(25., 20.));
         let mut tree = Quadtree::<SimpleType>::new(boundary);
 
         let points = vec![
@@ -381,7 +376,10 @@ mod test {
                 value: 0,
             });
         }
-        let mut tree = Quadtree::new(AABB::new(Vector2::new(0., 0.), 100., 100.));
+        let mut tree = Quadtree::new(AABB::from_radius(
+            Vector2::new(0., 0.),
+            Vector2::new(50., 50.),
+        ));
         let result = tree.insert_many(elements);
         assert!(result.is_ok());
         tree

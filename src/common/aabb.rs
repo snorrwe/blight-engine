@@ -17,6 +17,15 @@ impl AABB {
         }
     }
 
+    pub fn from_radius(center: Vector2, radius: Vector2) -> AABB {
+        assert!(radius.x > 0.);
+        assert!(radius.y > 0.);
+        AABB {
+            center: center,
+            radius: radius,
+        }
+    }
+
     pub fn get_center<'a>(&'a self) -> &'a Vector2 {
         &self.center
     }
@@ -33,6 +42,7 @@ impl AABB {
         &mut self.radius
     }
 
+    /// Test if AABB intersects with another
     pub fn intersects(&self, other: &AABB) -> bool {
         (self.center.x - other.center.x).abs() <= self.radius.x + other.radius.x
             && (self.center.y - other.center.y).abs() <= self.radius.y + other.radius.y
@@ -61,6 +71,7 @@ impl AABB {
         result
     }
 
+    /// Check if `point` is inside the AABB
     pub fn contains(&self, point: &Vector2) -> bool {
         self.closest_point(point) == *point
     }
