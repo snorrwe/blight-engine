@@ -1,5 +1,6 @@
 pub use super::super::super::components::render::RenderComponent;
 pub use super::render_component::RenderComponentInner;
+use std::collections::BTreeMap;
 
 use super::*;
 
@@ -10,7 +11,8 @@ pub struct RenderSystem<'a> {
     canvas: Canvas,
     texture_creator: TextureCreator,
     background_color: Color,
-    render_components: Vec<RenderComponentInner<'a>>,
+    render_components: BTreeMap<usize, RenderComponentInner<'a>>,
+    next_id: usize,
 }
 
 pub enum VideoError {
@@ -35,7 +37,8 @@ impl<'a> RenderSystem<'a> {
             texture_creator: canvas.texture_creator(),
             canvas: canvas,
             background_color: Color::RGB(0, 0, 0),
-            render_components: vec![],
+            render_components: BTreeMap::new(),
+            next_id: 0,
         }
     }
 
@@ -55,10 +58,11 @@ impl<'a> RenderSystem<'a> {
     pub fn render(&mut self) {
         self.clear();
         // Take ownership of `render_components`
-        let components = std::mem::replace(&mut self.render_components, vec![]);
-        components.iter().for_each(|component| unsafe {
+        let components = std::mem::replace(&mut self.render_components, BTreeMap::new());
+        components.values().for_each(|component| unsafe {
             self.render_texture(&*component.texture, &component.position);
         });
+        // Return owrnership to the render system
         self.render_components = components;
         self.canvas.present();
     }
@@ -86,14 +90,11 @@ impl<'a> RenderSystem<'a> {
     }
 
     pub fn create_component(&'a mut self) -> RenderComponent {
-        static mut NEXT_ID: usize = 0;
-        unsafe {
-            assert!(NEXT_ID < <usize>::max_value());
-            NEXT_ID += 1;
-            let result = RenderComponentInner::new(NEXT_ID.clone());
-            self.render_components.push(result);
-            RenderComponent::new(NEXT_ID.clone(), self as *mut RenderSystem)
-        }
+        assert!(self.next_id < <usize>::max_value());
+        self.next_id += 1;
+        let result = RenderComponentInner::new(self.next_id);
+        self.render_components.insert(self.next_id, result);
+        RenderComponent::new(self.next_id, self as *mut RenderSystem)
     }
 
     pub fn get_components_by_ids(
@@ -101,7 +102,7 @@ impl<'a> RenderSystem<'a> {
         ids: &[usize],
     ) -> Vec<&mut RenderComponentInner<'a>> {
         self.render_components
-            .iter_mut()
+            .values_mut()
             .filter(|component| {
                 let id = component.id;
                 ids.iter().any(|i| *i == id)
@@ -111,16 +112,14 @@ impl<'a> RenderSystem<'a> {
 
     pub fn get_component_by_id(&'a mut self, id: usize) -> &mut RenderComponentInner<'a> {
         self.render_components
-            .iter_mut()
-            .find(|component| component.id == id)
+            .get_mut(&id)
             .expect(&format!("No component exists by the id [{}]", id))
     }
 
     pub fn delete_components_by_ids(&mut self, ids: &[usize]) {
-        self.render_components.retain(|component| {
-            let id = component.id;
-            ids.iter().any(|i| *i != id)
-        });
+        for id in ids {
+            self.render_components.remove(id);
+        }
     }
 
     pub fn purge_components(&mut self) {
