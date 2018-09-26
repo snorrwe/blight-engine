@@ -10,23 +10,21 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
-use sdl2::rect::{Point, Rect};
+use sdl2::rect::Rect;
 
 use blight::core::BlightCore;
-use blight::systems::render::{Canvas, RenderComponent, RenderSystem, Texture, WINDOW_SIZE};
+use blight::systems::render::{RenderComponent, RenderSystem, Texture, WINDOW_SIZE};
 use blight::Game;
 
 const PLAYGROUND_WIDTH: u32 = 49;
 const PLAYGROUND_HEIGHT: u32 = 40;
 const CELL_SIZE: u32 = WINDOW_SIZE.0 / PLAYGROUND_WIDTH;
-const BLINK_THRESHOLD: u8 = 60;
 
 struct GameOfLife<'a> {
     engine: *mut BlightCore<'a>,
-    textures: (Texture<'a>, Texture<'a>),
+    cell_texture: Texture<'a>,
     playground: [bool; (PLAYGROUND_WIDTH * PLAYGROUND_HEIGHT) as usize],
     playing: bool,
-    blinks: u8,
     cells: BTreeMap<usize, RenderComponent<'a>>,
     last_update: Instant,
     game_speed: Duration,
@@ -34,12 +32,15 @@ struct GameOfLife<'a> {
 
 impl<'a> Game<'a> for GameOfLife<'a> {
     fn new(engine: *mut BlightCore<'a>) -> Self {
+        unsafe {
+            let renderer = (*engine).get_render();
+            (*renderer).set_background_color(Some(Color::RGB(255, 255, 255)));
+        }
         GameOfLife {
-            textures: GameOfLife::create_game_textures(engine),
+            cell_texture: GameOfLife::create_game_textures(engine),
             engine: engine,
             playground: [false; (PLAYGROUND_WIDTH * PLAYGROUND_HEIGHT) as usize],
             playing: false,
-            blinks: 0,
             cells: BTreeMap::new(),
             last_update: Instant::now(),
             game_speed: Duration::from_millis(500),
@@ -75,70 +76,23 @@ impl<'a> GameOfLife<'a> {
         }
     }
 
-    fn create_game_textures(engine: *mut BlightCore<'a>) -> (Texture<'a>, Texture<'a>) {
+    fn create_game_textures(engine: *mut BlightCore<'a>) -> Texture<'a> {
         unsafe {
             let renderer = (*engine).get_render();
-            let mut texture1 = (*renderer).create_texture(&(CELL_SIZE, CELL_SIZE));
-            let mut texture2 = (*renderer).create_texture(&(CELL_SIZE, CELL_SIZE));
-            GameOfLife::init_game_textures(&mut texture1, &mut texture2, renderer);
-            (texture1, texture2)
+            let mut texture = (*renderer).create_texture(&(CELL_SIZE, CELL_SIZE));
+            GameOfLife::init_game_textures(&mut texture, renderer);
+            texture
         }
     }
 
-    unsafe fn init_game_textures(
-        texture1: &mut Texture<'a>,
-        texture2: &mut Texture<'a>,
-        renderer: *mut RenderSystem,
-    ) {
-        enum CellColor {
-            White,
-            Yellow,
-        }
-        let textures = vec![(texture1, CellColor::Yellow), (texture2, CellColor::White)];
+    unsafe fn init_game_textures(texture: &mut Texture<'a>, renderer: *mut RenderSystem) {
         (*renderer)
             .get_canvas_mut()
-            .with_multiple_texture_canvas(textures.iter(), |texture, context| {
+            .with_texture_canvas(texture, |texture| {
                 texture.set_draw_color(Color::RGB(0, 0, 0));
                 texture.clear();
-                for i in 0..CELL_SIZE {
-                    for j in 0..CELL_SIZE {
-                        let (i, j) = (i as i32, j as i32);
-                        if let CellColor::Yellow = *context {
-                            GameOfLife::color_texture(
-                                texture,
-                                i,
-                                j,
-                                (Color::RGB(255, 255, 0), Color::RGB(200, 200, 0)),
-                                (4, 9),
-                            );
-                        }
-                        GameOfLife::color_texture(
-                            texture,
-                            i,
-                            j,
-                            (Color::RGB(192, 192, 192), Color::RGB(64, 64, 64)),
-                            (7, 5),
-                        );
-                    }
-                }
             })
             .unwrap();
-    }
-
-    fn color_texture(
-        texture: &mut Canvas,
-        i: i32,
-        j: i32,
-        colors: (Color, Color),
-        modulos: (i32, i32),
-    ) {
-        if (i + j) % modulos.0 == 0 {
-            texture.set_draw_color(colors.0);
-            texture.draw_point(Point::new(i, j)).unwrap();
-        } else if (i + j * 2) % modulos.0 == 0 {
-            texture.set_draw_color(colors.1);
-            texture.draw_point(Point::new(i, j)).unwrap();
-        }
     }
 
     fn update_world(&mut self) {
@@ -216,14 +170,8 @@ impl<'a> GameOfLife<'a> {
                 self.cells.insert(i, component);
             }
             let mut component = self.cells.get_mut(&i).unwrap();
-            let texture = if self.blinks > BLINK_THRESHOLD / 2 {
-                &self.textures.0
-            } else {
-                &self.textures.1
-            };
-            component.texture = texture;
+            component.texture = &self.cell_texture;
         }
-        self.blinks = (self.blinks + 1) % BLINK_THRESHOLD;
     }
 }
 
