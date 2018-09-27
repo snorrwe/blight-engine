@@ -2,7 +2,10 @@ use sdl2::{self, Sdl};
 use std::slice::Iter;
 
 pub type EventPump = sdl2::EventPump;
-pub type Event = sdl2::event::Event;
+
+pub use sdl2::event::Event;
+pub use sdl2::keyboard::Keycode;
+pub use sdl2::mouse::MouseButton;
 
 pub struct InputSystem {
     event_pump: EventPump,

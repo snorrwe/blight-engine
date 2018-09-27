@@ -1,19 +1,12 @@
-#![feature(extern_prelude)]
-extern crate sdl2;
 #[macro_use(blight_main)]
 extern crate blight;
 
 use std::collections::BTreeMap;
 use std::time::{Duration, Instant};
 
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-use sdl2::mouse::MouseButton;
-use sdl2::pixels::Color;
-use sdl2::rect::Rect;
-
 use blight::core::BlightCore;
-use blight::systems::render::{RenderComponent, RenderSystem, Texture, WINDOW_SIZE};
+use blight::systems::input::{Event, Keycode, MouseButton};
+use blight::systems::render::{Color, Rect, RenderComponent, RenderSystem, Texture, WINDOW_SIZE};
 use blight::Game;
 
 const PLAYGROUND_WIDTH: u32 = 49;
